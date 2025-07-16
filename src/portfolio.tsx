@@ -1,4 +1,5 @@
 import {
+  List,
   Detail,
   ActionPanel,
   Action,
@@ -11,7 +12,6 @@ import { useState, useEffect } from "react";
 import { Effect, Runtime } from "effect";
 import { createBitvavoClientLayer } from "./lib/bitvavo-client.js";
 import { AssetAnalyzer } from "./lib/asset-analyzer.js";
-import { MarkdownFormatter } from "./lib/markdown-formatter.js";
 import type { AssetSummary } from "./types/bitvavo.js";
 
 interface Preferences {
@@ -19,8 +19,25 @@ interface Preferences {
   bitvavoApiSecret: string;
 }
 
+const formatNumber = (value: number) => {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
+const formatSignedNumber = (value: number) => {
+  const formattedValue = formatNumber(Math.abs(value));
+  return value >= 0 ? `+ ${formattedValue}` : `- ${formattedValue}`;
+};
+
+const formatSignedCurrency = (value: number) => {
+  const formattedValue = formatNumber(Math.abs(value));
+  return value >= 0 ? `+ €${formattedValue}` : `- €${formattedValue}`;
+};
+
 export default function Portfolio() {
-  const [markdown, setMarkdown] = useState<string>("Loading your portfolio...");
+  const [assets, setAssets] = useState<AssetSummary[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,7 +56,6 @@ export default function Portfolio() {
         return;
       }
 
-      // Use credentials from preferences
       const bitvavoClientLayer = createBitvavoClientLayer(
         preferences.bitvavoApiKey,
         preferences.bitvavoApiSecret,
@@ -54,9 +70,8 @@ export default function Portfolio() {
       );
 
       const runtime = Runtime.defaultRuntime;
-      const assets = await Runtime.runPromise(runtime)(program);
-      const formattedMarkdown = MarkdownFormatter.formatAssetSummary(assets);
-      setMarkdown(formattedMarkdown);
+      const fetchedAssets = await Runtime.runPromise(runtime)(program);
+      setAssets(fetchedAssets);
     } catch (err) {
       console.error("Error loading portfolio:", err);
       setError(err instanceof Error ? err.message : "Failed to load portfolio");
@@ -91,19 +106,92 @@ export default function Portfolio() {
     );
   }
 
+  const sortedAssets = [...assets].sort((a, b) =>
+    a.symbol.localeCompare(b.symbol),
+  );
+
   return (
-    <Detail
+    <List
+      isShowingDetail
       isLoading={isLoading}
-      markdown={markdown}
-      actions={
-        <ActionPanel>
-          <Action title="Refresh Portfolio" onAction={loadPortfolio} />
-          <Action
-            title="Open Extension Preferences"
-            onAction={openExtensionPreferences}
+      searchBarPlaceholder="Search assets..."
+    >
+      {sortedAssets.map((asset) => (
+        <List.Item
+          key={asset.symbol}
+          title={asset.symbol}
+          detail={
+            <List.Item.Detail
+              metadata={
+                <List.Item.Detail.Metadata>
+                  <List.Item.Detail.Metadata.Label
+                    title="Current Price"
+                    text={`€${formatNumber(asset.currentPrice)}`}
+                  />
+                  <List.Item.Detail.Metadata.Separator />
+                  <List.Item.Detail.Metadata.Label
+                    title="Average Buy Price"
+                    text={`€${formatNumber(asset.averageBuyPrice)}`}
+                  />
+                  <List.Item.Detail.Metadata.Label
+                    title="Balance"
+                    text={asset.currentBalance.toString()}
+                  />
+                  <List.Item.Detail.Metadata.Separator />
+                  <List.Item.Detail.Metadata.Label
+                    title="Gain/Loss"
+                    text={formatSignedCurrency(asset.gainLoss)}
+                  />
+                  <List.Item.Detail.Metadata.Label
+                    title="Gain/Loss %"
+                    text={`${formatSignedNumber(asset.gainLossPercent)}%`}
+                  />
+                </List.Item.Detail.Metadata>
+              }
+            />
+          }
+        />
+      ))}
+      <List.Item
+        key="totals"
+        title="Totals"
+        detail={
+          <List.Item.Detail
+            metadata={
+              <List.Item.Detail.Metadata>
+                <List.Item.Detail.Metadata.Label
+                  title="Total Value"
+                  text={`€${formatNumber(
+                    assets.reduce((sum, asset) => sum + asset.totalValue, 0),
+                  )}`}
+                />
+                <List.Item.Detail.Metadata.Label
+                  title="Invested"
+                  text={`€${formatNumber(
+                    assets.reduce((sum, asset) => sum + asset.totalInvested, 0),
+                  )}`}
+                />
+                <List.Item.Detail.Metadata.Separator />
+                <List.Item.Detail.Metadata.Label
+                  title="Gain/Loss"
+                  text={formatSignedCurrency(
+                    assets.reduce((sum, asset) => sum + asset.gainLoss, 0),
+                  )}
+                />
+                <List.Item.Detail.Metadata.Label
+                  title="Gain/Loss %"
+                  text={`${formatSignedNumber(
+                    assets.reduce(
+                      (sum, asset) => sum + asset.gainLossPercent,
+                      0,
+                    ) / assets.length,
+                  )}%`}
+                />
+              </List.Item.Detail.Metadata>
+            }
           />
-        </ActionPanel>
-      }
-    />
+        }
+      />
+    </List>
   );
 }

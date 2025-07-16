@@ -2,7 +2,7 @@
 
 # Coiny - Bitvavo Asset Tracker
 
-This is a Raycast extension built with Bun and Effect that tracks cryptocurrency assets from Bitvavo exchange. It also includes a CLI tool as an additional feature, but the primary focus is the Raycast extension.
+This is a Raycast extension built with Bun and Effect that tracks cryptocurrency assets from Bitvavo exchange.
 
 ## Architecture Guidelines
 

@@ -19,8 +19,7 @@
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target node",
     "dev": "./node_modules/.bin/ray develop",
-    "start": "node dist/index.js",
-    "cli": "bun run src/index.ts"
+    "start": "node dist/index.js"
   },
   "commands": [
     {

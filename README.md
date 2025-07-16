@@ -1,19 +1,8 @@
 # Coiny - Bitvavo Asset Tracker
 
-A TypeScript CLI tool and Raycast extension built with Bun and Effect that tracks your cryptocurrency assets from Bitvavo exchange, showing comprehensive gain/loss analysis based on your complete trading history.
+A Raycast extension built with Bun and Effect that tracks your cryptocurrency assets from Bitvavo exchange, showing comprehensive gain/loss analysis based on your complete trading history.
 
 ## Setup Guide
-
-### CLI Usage
-
-```bash
-# Run the CLI tool
-bun run cli
-
-# Or run specific commands
-bun run cli assets
-bun run cli --help
-```
 
 ### Raycast Extension Usage
 
@@ -33,17 +22,10 @@ bun run cli --help
 
 ### API Configuration
 
-For CLI usage, set environment variables:
-```bash
-export BITVAVO_API_KEY="your_key_here"
-export BITVAVO_API_SECRET="your_secret_here"
-```
-
 For Raycast extension, configure through the extension preferences UI.
 
 ## Features
 
-- ✅ CLI tool with colored table output
 - ✅ Raycast extension with markdown formatting
 - ✅ Real-time portfolio tracking
 - ✅ Gain/loss calculations
@@ -60,18 +42,6 @@ For Raycast extension, configure through the extension preferences UI.
 - Created `MarkdownFormatter` for beautiful table rendering
 - Configured extension preferences for API credentials
 - Added action panel with refresh and preferences options
-
-### CLI Tool Preservation
-- Kept original CLI functionality intact
-- Added `cli` command to package.json for easy access
-- Maintained colored terminal output with cli-table3
-- All existing features work as before
-
-### Shared Architecture
-- Both CLI and Raycast extension use the same core services
-- Effect-based architecture preserved
-- BitvavoClient and AssetAnalyzer shared between both interfaces
-- Proper TypeScript types maintained
 
 ## Example Output
 
