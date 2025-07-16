@@ -1,7 +1,14 @@
 {
   "name": "coiny",
+  "title": "Coiny - Bitvavo Asset Tracker",
   "version": "1.0.0",
-  "description": "A CLI tool to track Bitvavo cryptocurrency assets",
+  "description": "Track your Bitvavo cryptocurrency assets - portfolio overview with gains/losses",
+  "icon": "icon.svg",
+  "author": "jost",
+  "categories": [
+    "Other"
+  ],
+  "license": "MIT",
   "main": "dist/index.js",
   "module": "src/index.ts",
   "type": "module",
@@ -11,21 +18,49 @@
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target node",
-    "dev": "bun run src/index.ts",
-    "start": "node dist/index.js"
+    "dev": "./node_modules/.bin/ray develop",
+    "start": "node dist/index.js",
+    "cli": "bun run src/index.ts"
   },
+  "commands": [
+    {
+      "name": "portfolio",
+      "title": "View Portfolio",
+      "description": "View your Bitvavo cryptocurrency portfolio with current values and gains/losses",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "bitvavoApiKey",
+      "title": "Bitvavo API Key",
+      "description": "Your Bitvavo API key from account settings",
+      "type": "textfield",
+      "required": true
+    },
+    {
+      "name": "bitvavoApiSecret",
+      "title": "Bitvavo API Secret",
+      "description": "Your Bitvavo API secret from account settings",
+      "type": "password",
+      "required": true
+    }
+  ],
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/node": "^24.0.14"
+    "@types/node": "^24.0.14",
+    "@types/react": "^19.1.8"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@raycast/api": "^1.101.0",
     "axios": "^1.10.0",
     "chalk": "^5.4.1",
     "cli-table3": "^0.6.5",
     "commander": "^14.0.0",
-    "effect": "^3.16.16"
+    "effect": "^3.16.16",
+    "react": "^19.1.0"
   }
 }

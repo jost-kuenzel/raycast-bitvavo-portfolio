@@ -2,7 +2,7 @@
 
 # Coiny - Bitvavo Asset Tracker
 
-This is a TypeScript CLI tool built with Bun and Effect that tracks cryptocurrency assets from Bitvavo exchange.
+This is a Raycast extension built with Bun and Effect that tracks cryptocurrency assets from Bitvavo exchange. It also includes a CLI tool as an additional feature, but the primary focus is the Raycast extension.
 
 ## Architecture Guidelines
 
@@ -15,11 +15,13 @@ This is a TypeScript CLI tool built with Bun and Effect that tracks cryptocurren
 
 ## Project Structure
 
-- `src/index.ts` - Main CLI application with commander
+- `src/portfolio.tsx` - Main Raycast extension command
 - `src/lib/bitvavo-client.ts` - Bitvavo API client with Effect integration
 - `src/lib/asset-analyzer.ts` - Asset analysis and calculation logic
-- `src/lib/output-formatter.ts` - CLI output formatting with chalk
+- `src/lib/markdown-formatter.ts` - Raycast markdown output formatting
 - `src/types/bitvavo.ts` - TypeScript interfaces for Bitvavo API
+- `src/index.ts` - CLI application (secondary feature) with commander
+- `src/lib/output-formatter.ts` - CLI output formatting with chalk
 
 ## Environment Variables
 
@@ -30,9 +32,11 @@ This is a TypeScript CLI tool built with Bun and Effect that tracks cryptocurren
 
 - **Effect**: For functional programming, async operations, and error handling
 - **Bun**: Runtime and package manager
-- **Commander**: CLI argument parsing
-- **Chalk**: Terminal color output
+- **Raycast API**: For building the Raycast extension
+- **React**: For Raycast extension UI
 - **Axios**: HTTP client for API calls
+- **Commander**: CLI argument parsing (secondary feature)
+- **Chalk**: Terminal color output (secondary feature)
 
 ## Development Guidelines
 
@@ -41,3 +45,4 @@ This is a TypeScript CLI tool built with Bun and Effect that tracks cryptocurren
 - Use type-safe imports for better TypeScript support
 - Follow the existing service pattern for new features
 - Use Effect's Context pattern for dependency injection
+- Ensure shared logic between CLI and Raycast extension is modular and reusable

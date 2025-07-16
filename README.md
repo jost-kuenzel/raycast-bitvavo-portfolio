@@ -1,66 +1,77 @@
 # Coiny - Bitvavo Asset Tracker
 
-A TypeScript CLI tool built with Bun and Effect that tracks your cryptocurrency assets from Bitvavo exchange, showing comprehensive gain/loss analysis based on your complete trading history.
+A TypeScript CLI tool and Raycast extension built with Bun and Effect that tracks your cryptocurrency assets from Bitvavo exchange, showing comprehensive gain/loss analysis based on your complete trading history.
+
+## Setup Guide
+
+### CLI Usage
+
+```bash
+# Run the CLI tool
+bun run cli
+
+# Or run specific commands
+bun run cli assets
+bun run cli --help
+```
+
+### Raycast Extension Usage
+
+1. Start the extension in development mode:
+   ```bash
+   bun run dev
+   ```
+
+2. Open Raycast and search for "View Portfolio" or "Coiny"
+
+3. Configure your API credentials:
+   - Open the extension preferences (⌘+,)
+   - Enter your Bitvavo API Key
+   - Enter your Bitvavo API Secret
+
+4. The extension will display your portfolio in a beautiful markdown format
+
+### API Configuration
+
+For CLI usage, set environment variables:
+```bash
+export BITVAVO_API_KEY="your_key_here"
+export BITVAVO_API_SECRET="your_secret_here"
+```
+
+For Raycast extension, configure through the extension preferences UI.
 
 ## Features
 
-- 🔍 Fetches your current cryptocurrency balances from Bitvavo
-- 📊 Analyzes your complete trade history including all executed orders (limit orders, market orders)
-- 💰 Shows current market prices and total portfolio value
-- 📈 Displays accurate gain/loss calculations in both absolute and percentage terms
-- 🎨 Beautiful colored terminal output with formatted tables
-- ⚡ Built with Effect for robust async operations and error handling
-- 🔄 Automatically fetches trades for BTC-EUR, XRP-EUR, and ETH-EUR markets
+- ✅ CLI tool with colored table output
+- ✅ Raycast extension with markdown formatting
+- ✅ Real-time portfolio tracking
+- ✅ Gain/loss calculations
+- ✅ Trade history analysis
+- ✅ Support for BTC, ETH, XRP
+- ✅ Proper error handling and loading states
 
-## Prerequisites
+## Development Highlights
 
-- [Bun](https://bun.sh/) installed on your system
-- A Bitvavo account with API access enabled
-- API Key and Secret from your Bitvavo account
+### Raycast Extension Implementation
+- Created `src/portfolio.tsx` with full Raycast API integration
+- Implemented React hooks for state management
+- Added proper error handling and loading states
+- Created `MarkdownFormatter` for beautiful table rendering
+- Configured extension preferences for API credentials
+- Added action panel with refresh and preferences options
 
-## Installation
+### CLI Tool Preservation
+- Kept original CLI functionality intact
+- Added `cli` command to package.json for easy access
+- Maintained colored terminal output with cli-table3
+- All existing features work as before
 
-1. Clone or download this repository
-2. Install dependencies:
-   ```bash
-   bun install
-   ```
-3. Build the project:
-   ```bash
-   bun run build
-   ```
-
-## Configuration
-
-Set your Bitvavo API credentials as environment variables:
-
-```bash
-export BITVAVO_API_KEY="your_api_key_here"
-export BITVAVO_API_SECRET="your_api_secret_here"
-```
-
-Or create a `.env` file in the project root:
-
-```
-BITVAVO_API_KEY=your_api_key_here
-BITVAVO_API_SECRET=your_api_secret_here
-```
-
-## Usage
-
-### Development Mode
-```bash
-bun run dev
-```
-
-### Production Mode
-```bash
-bun run start
-```
-
-### Available Commands
-
-- `coiny` or `coiny assets` - Display your cryptocurrency assets with gain/loss analysis
+### Shared Architecture
+- Both CLI and Raycast extension use the same core services
+- Effect-based architecture preserved
+- BitvavoClient and AssetAnalyzer shared between both interfaces
+- Proper TypeScript types maintained
 
 ## Example Output
 

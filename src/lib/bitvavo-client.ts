@@ -163,3 +163,99 @@ export const BitvavoClientLive = Layer.effect(
     return { getBalances, getTrades, getTicker };
   }),
 );
+
+export const createBitvavoClientLayer = (apiKey: string, apiSecret: string) =>
+  Layer.effect(
+    BitvavoClient,
+    Effect.gen(function* () {
+      const credentials: BitvavoCredentials = { apiKey, apiSecret };
+      const client: AxiosInstance = axios.create({
+        baseURL: BITVAVO_API_BASE,
+        timeout: 10000,
+      });
+
+      const getBalances = Effect.gen(function* () {
+        const endpoint = "/balance";
+        const headers = createAuthHeaders("GET", endpoint, "", credentials);
+
+        const response = yield* Effect.tryPromise({
+          try: () => client.get<BitvavoBalance[]>(endpoint, { headers }),
+          catch: (error) => new Error(`Failed to fetch balances: ${error}`),
+        });
+
+        return response.data;
+      });
+
+      const getTrades = (market?: string) =>
+        Effect.gen(function* () {
+          // Get all executed trades from /trades endpoint for each market
+          const markets = ["BTC-EUR", "XRP-EUR", "ETH-EUR"];
+          const allTrades: BitvavoTrade[] = [];
+
+          for (const tradeMarket of markets) {
+            if (market && tradeMarket !== market) continue;
+
+            const endpoint = `/trades?market=${tradeMarket}&limit=100`;
+            const headers = createAuthHeaders("GET", endpoint, "", credentials);
+
+            const response = yield* Effect.tryPromise({
+              try: () => client.get<any[]>(endpoint, { headers }),
+              catch: (error) =>
+                new Error(
+                  `Failed to fetch trades for ${tradeMarket}: ${error}`,
+                ),
+            });
+
+            const trades = response.data.map((trade: any) => ({
+              id: trade.id,
+              timestamp: trade.timestamp,
+              market: trade.market,
+              side: trade.side,
+              amount: trade.amount,
+              price: trade.price,
+              taker: trade.taker,
+              fee: trade.fee,
+              feeCurrency: trade.feeCurrency,
+              settled: trade.settled,
+              // Calculate sent/received amounts based on the trade
+              sentAmount:
+                trade.side === "buy"
+                  ? (
+                      parseFloat(trade.amount) * parseFloat(trade.price)
+                    ).toString()
+                  : trade.amount,
+              receivedAmount:
+                trade.side === "buy"
+                  ? trade.amount
+                  : (
+                      parseFloat(trade.amount) * parseFloat(trade.price)
+                    ).toString(),
+            }));
+
+            allTrades.push(...trades);
+          }
+
+          return allTrades.sort((a, b) => b.timestamp - a.timestamp);
+        });
+
+      const getTicker = (market: string) =>
+        Effect.gen(function* () {
+          // Use ticker/24h endpoint to get current price (public endpoint - no auth needed)
+          const endpoint = `/ticker/24h?market=${market}`;
+
+          const response = yield* Effect.tryPromise({
+            try: () => client.get<any>(endpoint),
+            catch: (error) =>
+              new Error(`Failed to fetch ticker for ${market}: ${error}`),
+          });
+
+          return {
+            market,
+            price: response.data.last,
+            timestamp: response.data.timestamp,
+          } as BitvavoTicker;
+        });
+
+      return { getBalances, getTrades, getTicker };
+    }),
+  );
