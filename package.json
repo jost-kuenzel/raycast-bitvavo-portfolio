@@ -1,10 +1,10 @@
 {
   "name": "coiny",
-  "title": "Coiny - Bitvavo Asset Tracker",
+  "title": "Coiny - Bitvavo Portfolio Viewer",
   "version": "1.0.0",
-  "description": "Track your Bitvavo cryptocurrency assets - portfolio overview with gains/losses",
+  "description": "View your Bitvavo cryptocurrency portfolio overview with gains/losses",
   "icon": "icon.svg",
-  "author": "jost",
+  "author": "Jost Künzel",
   "categories": [
     "Other"
   ],
