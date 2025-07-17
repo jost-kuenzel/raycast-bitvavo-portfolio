@@ -7,6 +7,7 @@ import {
   getPreferenceValues,
   showToast,
   Toast,
+  Color,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
 import { Effect, Runtime } from "effect";
@@ -34,6 +35,20 @@ const formatSignedNumber = (value: number) => {
 const formatSignedCurrency = (value: number) => {
   const formattedValue = formatNumber(Math.abs(value));
   return value >= 0 ? `+ €${formattedValue}` : `- €${formattedValue}`;
+};
+
+const formatSignedCurrencyWithColor = (value: number) => {
+  const formattedValue = formatNumber(Math.abs(value));
+  const color = value >= 0 ? Color.Green : Color.Red;
+  const sign = value >= 0 ? "+ €" : "- €";
+  return { color, value: `${sign}${formattedValue}` };
+};
+
+const formatSignedNumberWithColor = (value: number) => {
+  const formattedValue = formatNumber(Math.abs(value));
+  const color = value >= 0 ? Color.Green : Color.Red;
+  const sign = value >= 0 ? "+ " : "- ";
+  return { color, value: `${sign}${formattedValue}` };
 };
 
 export default function Portfolio() {
@@ -149,11 +164,11 @@ export default function Portfolio() {
                   <List.Item.Detail.Metadata.Separator />
                   <List.Item.Detail.Metadata.Label
                     title="Gain/Loss"
-                    text={formatSignedCurrency(asset.gainLoss)}
+                    text={formatSignedCurrencyWithColor(asset.gainLoss)}
                   />
                   <List.Item.Detail.Metadata.Label
                     title="Gain/Loss %"
-                    text={`${formatSignedNumber(asset.gainLossPercent)}%`}
+                    text={formatSignedNumberWithColor(asset.gainLossPercent)}
                   />
                 </List.Item.Detail.Metadata>
               }
@@ -161,46 +176,51 @@ export default function Portfolio() {
           }
         />
       ))}
-      <List.Item
-        key="totals"
-        title="Totals"
-        detail={
-          <List.Item.Detail
-            metadata={
-              <List.Item.Detail.Metadata>
-                <List.Item.Detail.Metadata.Label
-                  title="Total Value"
-                  text={`€${formatNumber(
-                    assets.reduce((sum, asset) => sum + asset.totalValue, 0),
-                  )}`}
-                />
-                <List.Item.Detail.Metadata.Label
-                  title="Invested"
-                  text={`€${formatNumber(
-                    assets.reduce((sum, asset) => sum + asset.totalInvested, 0),
-                  )}`}
-                />
-                <List.Item.Detail.Metadata.Separator />
-                <List.Item.Detail.Metadata.Label
-                  title="Gain/Loss"
-                  text={formatSignedCurrency(
-                    assets.reduce((sum, asset) => sum + asset.gainLoss, 0),
-                  )}
-                />
-                <List.Item.Detail.Metadata.Label
-                  title="Gain/Loss %"
-                  text={`${formatSignedNumber(
-                    assets.reduce(
-                      (sum, asset) => sum + asset.gainLossPercent,
-                      0,
-                    ) / assets.length,
-                  )}%`}
-                />
-              </List.Item.Detail.Metadata>
-            }
-          />
-        }
-      />
+      {!isLoading && (
+        <List.Item
+          key="totals"
+          title="Totals"
+          detail={
+            <List.Item.Detail
+              metadata={
+                <List.Item.Detail.Metadata>
+                  <List.Item.Detail.Metadata.Label
+                    title="Total Value"
+                    text={`€${formatNumber(
+                      assets.reduce((sum, asset) => sum + asset.totalValue, 0),
+                    )}`}
+                  />
+                  <List.Item.Detail.Metadata.Label
+                    title="Invested"
+                    text={`€${formatNumber(
+                      assets.reduce(
+                        (sum, asset) => sum + asset.totalInvested,
+                        0,
+                      ),
+                    )}`}
+                  />
+                  <List.Item.Detail.Metadata.Separator />
+                  <List.Item.Detail.Metadata.Label
+                    title="Gain/Loss"
+                    text={formatSignedCurrencyWithColor(
+                      assets.reduce((sum, asset) => sum + asset.gainLoss, 0),
+                    )}
+                  />
+                  <List.Item.Detail.Metadata.Label
+                    title="Gain/Loss %"
+                    text={formatSignedNumberWithColor(
+                      assets.reduce(
+                        (sum, asset) => sum + asset.gainLossPercent,
+                        0,
+                      ) / assets.length,
+                    )}
+                  />
+                </List.Item.Detail.Metadata>
+              }
+            />
+          }
+        />
+      )}
     </List>
   );
 }
