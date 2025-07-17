@@ -8,7 +8,7 @@ A Raycast extension built with Bun and Effect that tracks your cryptocurrency as
 
 1. Start the extension in development mode:
    ```bash
-   bun run dev
+   npm run dev
    ```
 
 2. Open Raycast and search for "View Portfolio" or "Coiny"
@@ -43,22 +43,6 @@ For Raycast extension, configure through the extension preferences UI.
 - Configured extension preferences for API credentials
 - Added action panel with refresh and preferences options
 
-## Example Output
-
-```
-🪙 Bitvavo Asset Portfolio
-┌────────┬───────────────┬───────────────┬───────────────┬─────────────┬───────────┬───────────┬─────────────┐
-│ Asset  │ Current Price │ Avg Buy Price │ Balance       │ Total Value │ Invested  │ Gain/Loss │ Gain/Loss % │
-├────────┼───────────────┼───────────────┼───────────────┼─────────────┼───────────┼───────────┼─────────────┤
-│ BTC    │ €102700.00    │ €93478.96     │ 0.06288781    │ €6458.58    │ €5878.69  │ €579.89   │ 9.86%       │
-├────────┼───────────────┼───────────────┼───────────────┼─────────────┼───────────┼───────────┼─────────────┤
-│ XRP    │ €2.56         │ €2.14         │ 331.45912300  │ €849.93     │ €708.21   │ €141.71   │ 20.01%      │
-├────────┼───────────────┼───────────────┼───────────────┼─────────────┼───────────┼───────────┼─────────────┤
-│ ETH    │ €2790.00      │ €2327.78      │ 0.47097084    │ €1314.01    │ €1096.32  │ €217.69   │ 19.86%      │
-├────────┼───────────────┼───────────────┼───────────────┼─────────────┼───────────┼───────────┼─────────────┤
-│ TOTAL  │               │               │               │ €8622.51    │ €7683.22  │ €939.30   │ 12.23%      │
-└────────┴───────────────┴───────────────┴───────────────┴─────────────┴───────────┴───────────┴─────────────┘
-```
 
 ## How It Works
 
@@ -92,9 +76,7 @@ src/
 
 ### Scripts
 
-- `bun run dev` - Run in development mode
-- `bun run build` - Build for production
-- `bun run start` - Run production build
+- `npm run dev` - Run in development mode
 
 ### Technologies Used
 

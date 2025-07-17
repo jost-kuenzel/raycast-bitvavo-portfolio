@@ -1,25 +1,20 @@
 {
   "name": "coiny",
-  "title": "Coiny - Bitvavo Portfolio Viewer",
+  "title": "Bitvavo Portfolio Viewer",
   "version": "1.0.0",
   "description": "View your Bitvavo cryptocurrency portfolio overview with gains/losses",
-  "icon": "icon.svg",
+  "icon": "icon.png",
   "author": "Jost Künzel",
   "categories": [
-    "Other"
+    "Finance"
   ],
   "license": "MIT",
   "main": "dist/portfolio.js",
   "module": "src/portfolio.tsx",
   "type": "module",
   "private": true,
-  "bin": {
-    "coiny": "./dist/index.js"
-  },
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target node",
-    "dev": "./node_modules/.bin/ray develop",
-    "start": "node dist/index.js"
+    "dev": "ray develop"
   },
   "commands": [
     {
@@ -47,7 +42,6 @@
   ],
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/node": "^24.0.14",
     "@types/react": "^19.1.8"
   },
   "peerDependencies": {
@@ -56,9 +50,6 @@
   "dependencies": {
     "@raycast/api": "^1.101.0",
     "axios": "^1.10.0",
-    "chalk": "^5.4.1",
-    "cli-table3": "^0.6.5",
-    "commander": "^14.0.0",
     "effect": "^3.16.16",
     "react": "^19.1.0"
   }
