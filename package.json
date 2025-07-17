@@ -9,8 +9,8 @@
     "Other"
   ],
   "license": "MIT",
-  "main": "dist/index.js",
-  "module": "src/index.ts",
+  "main": "dist/portfolio.js",
+  "module": "src/portfolio.tsx",
   "type": "module",
   "private": true,
   "bin": {

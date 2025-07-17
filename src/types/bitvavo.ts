@@ -28,6 +28,7 @@ export interface BitvavoTicker {
 
 export interface AssetSummary {
   symbol: string;
+  market: string;
   currentBalance: number;
   totalPurchased: number;
   totalSold: number;

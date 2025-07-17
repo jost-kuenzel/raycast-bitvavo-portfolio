@@ -8,6 +8,7 @@ import {
   showToast,
   Toast,
   Color,
+  Image,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
 import { Effect, Runtime } from "effect";
@@ -32,16 +33,14 @@ const formatSignedNumber = (value: number) => {
   return value >= 0 ? `+ ${formattedValue}` : `- ${formattedValue}`;
 };
 
-const formatSignedCurrency = (value: number) => {
-  const formattedValue = formatNumber(Math.abs(value));
-  return value >= 0 ? `+ €${formattedValue}` : `- €${formattedValue}`;
-};
-
-const formatSignedCurrencyWithColor = (value: number) => {
+const formatSignedCurrencyWithColor = (
+  value: number,
+  currencySymbol: string,
+) => {
   const formattedValue = formatNumber(Math.abs(value));
   const color = value >= 0 ? Color.Green : Color.Red;
-  const sign = value >= 0 ? "+ €" : "- €";
-  return { color, value: `${sign}${formattedValue}` };
+  const sign = value >= 0 ? "+ " : "- ";
+  return { color, value: `${sign}${currencySymbol}${formattedValue}` };
 };
 
 const formatSignedNumberWithColor = (value: number) => {
@@ -49,6 +48,21 @@ const formatSignedNumberWithColor = (value: number) => {
   const color = value >= 0 ? Color.Green : Color.Red;
   const sign = value >= 0 ? "+ " : "- ";
   return { color, value: `${sign}${formattedValue}` };
+};
+
+// Helper function to get cryptocurrency icon URL
+const getCryptocurrencyIcon = (symbol: string) => {
+  // Use the jsdelivr CDN to serve icons from cryptocurrency-icons package
+  const baseUrl =
+    "https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/svg/color";
+  const iconUrl = `${baseUrl}/${symbol.toLowerCase()}.svg`;
+
+  // Return the icon with a fallback to a generic cryptocurrency icon and circular mask
+  return {
+    source: iconUrl,
+    fallback: `${baseUrl}/generic.svg`,
+    mask: Image.Mask.Circle,
+  };
 };
 
 export default function Portfolio() {
@@ -125,57 +139,84 @@ export default function Portfolio() {
     a.symbol.localeCompare(b.symbol),
   );
 
+  // Helper function to get currency symbol from market
+  const getCurrencySymbolFromMarket = (market: string) => {
+    if (market.endsWith("-USDC")) return "$";
+    return "€"; // Default to EUR
+  };
+
+  // Helper function to format market display
+  const formatMarketDisplay = (market: string) => {
+    return market.replace("-", " / ");
+  };
+
   return (
     <List
       isShowingDetail
       isLoading={isLoading}
       searchBarPlaceholder="Search assets..."
     >
-      {sortedAssets.map((asset) => (
-        <List.Item
-          key={asset.symbol}
-          title={asset.symbol}
-          detail={
-            <List.Item.Detail
-              metadata={
-                <List.Item.Detail.Metadata>
-                  <List.Item.Detail.Metadata.Label
-                    title="Current Price"
-                    text={`€${formatNumber(asset.currentPrice)}`}
-                  />
-                  <List.Item.Detail.Metadata.Separator />
-                  <List.Item.Detail.Metadata.Label
-                    title="Average Buy Price"
-                    text={`€${formatNumber(asset.averageBuyPrice)}`}
-                  />
-                  <List.Item.Detail.Metadata.Label
-                    title="Balance"
-                    text={asset.currentBalance.toString()}
-                  />
-                  <List.Item.Detail.Metadata.Separator />
-                  <List.Item.Detail.Metadata.Label
-                    title="Invested"
-                    text={`€${formatNumber(asset.totalInvested)}`}
-                  />
-                  <List.Item.Detail.Metadata.Label
-                    title="Current Value"
-                    text={`€${formatNumber(asset.totalValue)}`}
-                  />
-                  <List.Item.Detail.Metadata.Separator />
-                  <List.Item.Detail.Metadata.Label
-                    title="Gain/Loss"
-                    text={formatSignedCurrencyWithColor(asset.gainLoss)}
-                  />
-                  <List.Item.Detail.Metadata.Label
-                    title="Gain/Loss %"
-                    text={formatSignedNumberWithColor(asset.gainLossPercent)}
-                  />
-                </List.Item.Detail.Metadata>
-              }
-            />
-          }
-        />
-      ))}
+      {sortedAssets.map((asset) => {
+        const currencySymbol = getCurrencySymbolFromMarket(asset.market);
+        const iconPath = getCryptocurrencyIcon(asset.symbol);
+        return (
+          <List.Item
+            key={asset.symbol}
+            title={formatMarketDisplay(asset.market)}
+            icon={iconPath}
+            detail={
+              <List.Item.Detail
+                metadata={
+                  <List.Item.Detail.Metadata>
+                    <List.Item.Detail.Metadata.Label
+                      title="Current Price"
+                      text={`${currencySymbol}${formatNumber(
+                        asset.currentPrice,
+                      )}`}
+                    />
+                    <List.Item.Detail.Metadata.Separator />
+                    <List.Item.Detail.Metadata.Label
+                      title="Average Buy Price"
+                      text={`${currencySymbol}${formatNumber(
+                        asset.averageBuyPrice,
+                      )}`}
+                    />
+                    <List.Item.Detail.Metadata.Label
+                      title="Balance"
+                      text={asset.currentBalance.toString()}
+                    />
+                    <List.Item.Detail.Metadata.Separator />
+                    <List.Item.Detail.Metadata.Label
+                      title="Invested"
+                      text={`${currencySymbol}${formatNumber(
+                        asset.totalInvested,
+                      )}`}
+                    />
+                    <List.Item.Detail.Metadata.Label
+                      title="Current Value"
+                      text={`${currencySymbol}${formatNumber(
+                        asset.totalValue,
+                      )}`}
+                    />
+                    <List.Item.Detail.Metadata.Separator />
+                    <List.Item.Detail.Metadata.Label
+                      title="Gain/Loss"
+                      text={formatSignedCurrencyWithColor(
+                        asset.gainLoss,
+                        currencySymbol,
+                      )}
+                    />
+                    <List.Item.Detail.Metadata.Label
+                      title="Gain/Loss %"
+                      text={formatSignedNumberWithColor(asset.gainLossPercent)}
+                    />
+                  </List.Item.Detail.Metadata>
+                }
+              />
+            }
+          />
+        );
+      })}
       {!isLoading && (
         <List.Item
           key="totals"
@@ -185,34 +226,66 @@ export default function Portfolio() {
               metadata={
                 <List.Item.Detail.Metadata>
                   <List.Item.Detail.Metadata.Label
-                    title="Total Value"
+                    title="Total Value (EUR)"
                     text={`€${formatNumber(
-                      assets.reduce((sum, asset) => sum + asset.totalValue, 0),
+                      assets
+                        .filter((asset) => asset.market.endsWith("-EUR"))
+                        .reduce((sum, asset) => sum + asset.totalValue, 0),
                     )}`}
                   />
                   <List.Item.Detail.Metadata.Label
-                    title="Invested"
-                    text={`€${formatNumber(
-                      assets.reduce(
-                        (sum, asset) => sum + asset.totalInvested,
-                        0,
-                      ),
+                    title="Total Value (USDC)"
+                    text={`$${formatNumber(
+                      assets
+                        .filter((asset) => asset.market.endsWith("-USDC"))
+                        .reduce((sum, asset) => sum + asset.totalValue, 0),
                     )}`}
                   />
                   <List.Item.Detail.Metadata.Separator />
                   <List.Item.Detail.Metadata.Label
-                    title="Gain/Loss"
+                    title="Invested (EUR)"
+                    text={`€${formatNumber(
+                      assets
+                        .filter((asset) => asset.market.endsWith("-EUR"))
+                        .reduce((sum, asset) => sum + asset.totalInvested, 0),
+                    )}`}
+                  />
+                  <List.Item.Detail.Metadata.Label
+                    title="Invested (USDC)"
+                    text={`$${formatNumber(
+                      assets
+                        .filter((asset) => asset.market.endsWith("-USDC"))
+                        .reduce((sum, asset) => sum + asset.totalInvested, 0),
+                    )}`}
+                  />
+                  <List.Item.Detail.Metadata.Separator />
+                  <List.Item.Detail.Metadata.Label
+                    title="Gain/Loss (EUR)"
                     text={formatSignedCurrencyWithColor(
-                      assets.reduce((sum, asset) => sum + asset.gainLoss, 0),
+                      assets
+                        .filter((asset) => asset.market.endsWith("-EUR"))
+                        .reduce((sum, asset) => sum + asset.gainLoss, 0),
+                      "€",
                     )}
                   />
                   <List.Item.Detail.Metadata.Label
-                    title="Gain/Loss %"
+                    title="Gain/Loss (USDC)"
+                    text={formatSignedCurrencyWithColor(
+                      assets
+                        .filter((asset) => asset.market.endsWith("-USDC"))
+                        .reduce((sum, asset) => sum + asset.gainLoss, 0),
+                      "$",
+                    )}
+                  />
+                  <List.Item.Detail.Metadata.Label
+                    title="Gain/Loss % (Avg)"
                     text={formatSignedNumberWithColor(
-                      assets.reduce(
-                        (sum, asset) => sum + asset.gainLossPercent,
-                        0,
-                      ) / assets.length,
+                      assets.length > 0
+                        ? assets.reduce(
+                            (sum, asset) => sum + asset.gainLossPercent,
+                            0,
+                          ) / assets.length
+                        : 0,
                     )}
                   />
                 </List.Item.Detail.Metadata>

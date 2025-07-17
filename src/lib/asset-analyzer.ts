@@ -47,11 +47,33 @@ export class AssetAnalyzer {
       const currentBalance =
         parseFloat(balance.available) + parseFloat(balance.inOrder);
 
-      // Filter trades for this asset
+      // Filter trades for this asset and determine the market
       const assetTrades = allTrades.filter(
         (trade) =>
-          trade.market === `${symbol}-EUR` || trade.market === `${symbol}-USD`,
+          trade.market === `${symbol}-EUR` || trade.market === `${symbol}-USDC`,
       );
+
+      // Determine the market from trades or default to EUR
+      let market = `${symbol}-EUR`;
+      if (assetTrades.length > 0) {
+        // Use the market from the most recent trade
+        const sortedTrades = assetTrades.sort(
+          (a, b) => b.timestamp - a.timestamp,
+        );
+        const mostRecentTrade = sortedTrades[0];
+        if (mostRecentTrade) {
+          market = mostRecentTrade.market;
+        }
+      } else {
+        // If no trades, check if USDC market exists by trying to get ticker
+        try {
+          yield* client.getTicker(`${symbol}-USDC`);
+          market = `${symbol}-USDC`;
+        } catch {
+          // Default to EUR if USDC ticker fails
+          market = `${symbol}-EUR`;
+        }
+      }
 
       // Calculate purchase and sale totals
       const { totalPurchased, totalSold, totalInvested, totalReceived } =
@@ -62,7 +84,6 @@ export class AssetAnalyzer {
         totalPurchased > 0 ? totalInvested / totalPurchased : 0;
 
       // Get current price
-      const market = `${symbol}-EUR`;
       const ticker = yield* client.getTicker(market);
       const currentPrice = parseFloat(ticker.price);
 
@@ -75,6 +96,7 @@ export class AssetAnalyzer {
 
       return {
         symbol,
+        market,
         currentBalance,
         totalPurchased,
         totalSold,
