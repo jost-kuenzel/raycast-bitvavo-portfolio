@@ -139,6 +139,15 @@ export default function Portfolio() {
                   />
                   <List.Item.Detail.Metadata.Separator />
                   <List.Item.Detail.Metadata.Label
+                    title="Invested"
+                    text={`€${formatNumber(asset.totalInvested)}`}
+                  />
+                  <List.Item.Detail.Metadata.Label
+                    title="Current Value"
+                    text={`€${formatNumber(asset.totalValue)}`}
+                  />
+                  <List.Item.Detail.Metadata.Separator />
+                  <List.Item.Detail.Metadata.Label
                     title="Gain/Loss"
                     text={formatSignedCurrency(asset.gainLoss)}
                   />
