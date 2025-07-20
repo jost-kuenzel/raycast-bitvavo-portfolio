@@ -17,7 +17,7 @@ This is a Raycast extension built with Node.js and Effect that tracks cryptocurr
 
 - `src/portfolio.tsx` - Main Raycast extension command
 - `src/lib/bitvavo-client.ts` - Bitvavo API client with Effect integration
-- `src/lib/asset-analyzer.ts` - Asset analysis and calculation logic
+- `src/lib/asset-analyzer.ts` - Asset analysis service using Effect.Service pattern
 - `src/lib/utils.ts` - Helper functions for formatting and UI utilities
 - `src/types/bitvavo.ts` - TypeScript interfaces for Bitvavo API
 

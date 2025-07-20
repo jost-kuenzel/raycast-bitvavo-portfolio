@@ -1,84 +1,85 @@
 import {
-  List,
-  Detail,
-  ActionPanel,
   Action,
-  openExtensionPreferences,
+  ActionPanel,
+  Detail,
   getPreferenceValues,
+  List,
+  openExtensionPreferences,
   showToast,
   Toast,
-} from "@raycast/api";
-import { useState, useEffect } from "react";
-import { Effect, Runtime } from "effect";
-import { createBitvavoClientLayer } from "./lib/bitvavo-client.js";
-import { AssetAnalyzer } from "./lib/asset-analyzer.js";
-import type { AssetSummary } from "./types/bitvavo.js";
+} from '@raycast/api'
+import { ConfigProvider, Effect, Layer, pipe } from 'effect'
+import { useEffect, useState } from 'react'
+import { AssetAnalyzer } from './lib/asset-analyzer.js'
+import { BitvavoClient } from './lib/bitvavo-client.js'
 import {
+  formatMarketDisplay,
   formatNumber,
   formatSignedCurrencyWithColor,
   formatSignedNumberWithColor,
   getCryptocurrencyIcon,
   getCurrencySymbolFromMarket,
-  formatMarketDisplay,
-} from "./lib/utils.js";
+} from './lib/utils.js'
+import type { AssetSummary } from './types/bitvavo.js'
 
 interface Preferences {
-  bitvavoApiKey: string;
-  bitvavoApiSecret: string;
+  bitvavoApiKey: string
+  bitvavoApiSecret: string
 }
 
 export default function Portfolio() {
-  const [assets, setAssets] = useState<AssetSummary[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [assets, setAssets] = useState<AssetSummary[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
   const loadPortfolio = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
+      setIsLoading(true)
+      setError(null)
 
-      const preferences = getPreferenceValues<Preferences>();
+      const preferences = getPreferenceValues<Preferences>()
 
       if (!preferences.bitvavoApiKey || !preferences.bitvavoApiSecret) {
         setError(
-          "Please configure your Bitvavo API credentials in extension preferences",
-        );
-        setIsLoading(false);
-        return;
+          'Please configure your Bitvavo API credentials in extension preferences',
+        )
+        setIsLoading(false)
+        return
       }
 
-      const bitvavoClientLayer = createBitvavoClientLayer(
-        preferences.bitvavoApiKey,
-        preferences.bitvavoApiSecret,
-      );
+      const fetchedAssets = await pipe(
+        AssetAnalyzer.analyzeAssets(),
+        Effect.provide(
+          Layer.mergeAll(BitvavoClient.Default, AssetAnalyzer.Default),
+        ),
+        Effect.withConfigProvider(
+          ConfigProvider.fromMap(
+            new Map<string, string>([
+              ['BITVAVO_API_KEY', preferences.bitvavoApiKey],
+              ['BITVAVO_API_SECRET', preferences.bitvavoApiSecret],
+            ]),
+          ),
+        ),
+        Effect.runPromise,
+      )
 
-      const program = Effect.gen(function* () {
-        const assets = yield* AssetAnalyzer.analyzeAssets;
-        return assets;
-      }).pipe(
-        Effect.provide(bitvavoClientLayer),
-        Effect.catchAll((error) => Effect.fail(error as Error)),
-      );
-
-      const runtime = Runtime.defaultRuntime;
-      const fetchedAssets = await Runtime.runPromise(runtime)(program);
-      setAssets(fetchedAssets);
+      setAssets(fetchedAssets)
     } catch (err) {
-      console.error("Error loading portfolio:", err);
-      setError(err instanceof Error ? err.message : "Failed to load portfolio");
+      console.error('Error loading portfolio:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load portfolio')
       await showToast({
         style: Toast.Style.Failure,
-        title: "Error loading portfolio",
-        message: err instanceof Error ? err.message : "Unknown error",
-      });
+        title: 'Error loading portfolio',
+        message: err instanceof Error ? err.message : 'Unknown error',
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    loadPortfolio();
-  }, []);
+    loadPortfolio()
+  }, [])
 
   if (error) {
     return (
@@ -94,12 +95,12 @@ export default function Portfolio() {
           </ActionPanel>
         }
       />
-    );
+    )
   }
 
   const sortedAssets = [...assets].sort((a, b) =>
     a.symbol.localeCompare(b.symbol),
-  );
+  )
 
   return (
     <List
@@ -107,9 +108,9 @@ export default function Portfolio() {
       isLoading={isLoading}
       searchBarPlaceholder="Search assets..."
     >
-      {sortedAssets.map((asset) => {
-        const currencySymbol = getCurrencySymbolFromMarket(asset.market);
-        const iconPath = getCryptocurrencyIcon(asset.symbol);
+      {sortedAssets.map(asset => {
+        const currencySymbol = getCurrencySymbolFromMarket(asset.market)
+        const iconPath = getCryptocurrencyIcon(asset.symbol)
         return (
           <List.Item
             key={asset.symbol}
@@ -166,7 +167,7 @@ export default function Portfolio() {
               />
             }
           />
-        );
+        )
       })}
       {!isLoading && (
         <List.Item
@@ -180,7 +181,7 @@ export default function Portfolio() {
                     title="Total Value (EUR)"
                     text={`€${formatNumber(
                       assets
-                        .filter((asset) => asset.market.endsWith("-EUR"))
+                        .filter(asset => asset.market.endsWith('-EUR'))
                         .reduce((sum, asset) => sum + asset.totalValue, 0),
                     )}`}
                   />
@@ -188,7 +189,7 @@ export default function Portfolio() {
                     title="Total Value (USDC)"
                     text={`$${formatNumber(
                       assets
-                        .filter((asset) => asset.market.endsWith("-USDC"))
+                        .filter(asset => asset.market.endsWith('-USDC'))
                         .reduce((sum, asset) => sum + asset.totalValue, 0),
                     )}`}
                   />
@@ -197,7 +198,7 @@ export default function Portfolio() {
                     title="Invested (EUR)"
                     text={`€${formatNumber(
                       assets
-                        .filter((asset) => asset.market.endsWith("-EUR"))
+                        .filter(asset => asset.market.endsWith('-EUR'))
                         .reduce((sum, asset) => sum + asset.totalInvested, 0),
                     )}`}
                   />
@@ -205,7 +206,7 @@ export default function Portfolio() {
                     title="Invested (USDC)"
                     text={`$${formatNumber(
                       assets
-                        .filter((asset) => asset.market.endsWith("-USDC"))
+                        .filter(asset => asset.market.endsWith('-USDC'))
                         .reduce((sum, asset) => sum + asset.totalInvested, 0),
                     )}`}
                   />
@@ -214,18 +215,18 @@ export default function Portfolio() {
                     title="Gain/Loss (EUR)"
                     text={formatSignedCurrencyWithColor(
                       assets
-                        .filter((asset) => asset.market.endsWith("-EUR"))
+                        .filter(asset => asset.market.endsWith('-EUR'))
                         .reduce((sum, asset) => sum + asset.gainLoss, 0),
-                      "€",
+                      '€',
                     )}
                   />
                   <List.Item.Detail.Metadata.Label
                     title="Gain/Loss (USDC)"
                     text={formatSignedCurrencyWithColor(
                       assets
-                        .filter((asset) => asset.market.endsWith("-USDC"))
+                        .filter(asset => asset.market.endsWith('-USDC'))
                         .reduce((sum, asset) => sum + asset.gainLoss, 0),
-                      "$",
+                      '$',
                     )}
                   />
                   <List.Item.Detail.Metadata.Label
@@ -246,5 +247,5 @@ export default function Portfolio() {
         />
       )}
     </List>
-  );
+  )
 }
