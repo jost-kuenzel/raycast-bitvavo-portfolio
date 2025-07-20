@@ -2,7 +2,7 @@
 
 # Coiny - Bitvavo Asset Tracker
 
-This is a Raycast extension built with Bun and Effect that tracks cryptocurrency assets from Bitvavo exchange.
+This is a Raycast extension built with Node.js and Effect that tracks cryptocurrency assets from Bitvavo exchange.
 
 ## Architecture Guidelines
 
@@ -18,17 +18,21 @@ This is a Raycast extension built with Bun and Effect that tracks cryptocurrency
 - `src/portfolio.tsx` - Main Raycast extension command
 - `src/lib/bitvavo-client.ts` - Bitvavo API client with Effect integration
 - `src/lib/asset-analyzer.ts` - Asset analysis and calculation logic
+- `src/lib/utils.ts` - Helper functions for formatting and UI utilities
 - `src/types/bitvavo.ts` - TypeScript interfaces for Bitvavo API
 
 ## Environment Variables
 
-- `BITVAVO_API_KEY` - Your Bitvavo API key
-- `BITVAVO_API_SECRET` - Your Bitvavo API secret
+The extension uses Raycast preferences for configuration instead of environment variables:
+
+- `bitvavoApiKey` - Your Bitvavo API key (configured via Raycast preferences)
+- `bitvavoApiSecret` - Your Bitvavo API secret (configured via Raycast preferences)
 
 ## Key Libraries
 
 - **Effect**: For functional programming, async operations, and error handling
-- **Bun**: Runtime and package manager
+- **Node.js**: Runtime environment
+- **npm**: Package manager
 - **Raycast API**: For building the Raycast extension
 - **React**: For Raycast extension UI
 - **Axios**: HTTP client for API calls

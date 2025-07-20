@@ -3,10 +3,10 @@
   "title": "Bitvavo Portfolio Viewer",
   "version": "1.0.0",
   "description": "View your Bitvavo cryptocurrency portfolio overview with gains/losses",
-  "icon": "icon.png",
+  "icon": "icon.svg",
   "author": "Jost Künzel",
   "categories": [
-    "Finance"
+    "Other"
   ],
   "license": "MIT",
   "main": "dist/portfolio.js",
@@ -14,7 +14,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "ray develop"
+    "dev": "npx ray develop",
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit"
   },
   "commands": [
     {
@@ -41,7 +43,7 @@
     }
   ],
   "devDependencies": {
-    "@types/bun": "latest",
+    "@types/node": "^24.0.14",
     "@types/react": "^19.1.8"
   },
   "peerDependencies": {

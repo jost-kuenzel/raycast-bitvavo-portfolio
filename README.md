@@ -1,6 +1,6 @@
 # Coiny - Bitvavo Asset Tracker
 
-A Raycast extension built with Bun and Effect that tracks your cryptocurrency assets from Bitvavo exchange, showing comprehensive gain/loss analysis based on your complete trading history.
+A Raycast extension built with Node.js and Effect that tracks your cryptocurrency assets from Bitvavo exchange, showing comprehensive gain/loss analysis based on your complete trading history.
 
 ## Setup Guide
 
@@ -39,9 +39,9 @@ For Raycast extension, configure through the extension preferences UI.
 - Created `src/portfolio.tsx` with full Raycast API integration
 - Implemented React hooks for state management
 - Added proper error handling and loading states
-- Created `MarkdownFormatter` for beautiful table rendering
 - Configured extension preferences for API credentials
 - Added action panel with refresh and preferences options
+- Organized helper functions into dedicated utils module
 
 
 ## How It Works
@@ -56,18 +56,18 @@ The tool fetches your complete trading history from Bitvavo, including:
 ### Data Sources
 
 - **Balance data**: From Bitvavo's `/balance` endpoint
-- **Trade history**: From Bitvavo's `/trades` endpoint for each market (BTC-EUR, XRP-EUR, ETH-EUR)
+- **Trade history**: From Bitvavo's `/trades` endpoint for each supported market
 - **Current prices**: From Bitvavo's `/ticker/24h` endpoint
 
 ## Project Structure
 
 ```
 src/
-├── index.ts              # Main CLI application
+├── portfolio.tsx         # Main Raycast extension command
 ├── lib/
 │   ├── bitvavo-client.ts # Bitvavo API client with Effect integration
 │   ├── asset-analyzer.ts # Asset analysis and calculation logic
-│   └── output-formatter.ts # CLI output formatting with chalk
+│   └── utils.ts          # Helper functions for formatting and display
 └── types/
     └── bitvavo.ts        # TypeScript interfaces for Bitvavo API
 ```
@@ -76,38 +76,39 @@ src/
 
 ### Scripts
 
-- `npm run dev` - Run in development mode
+- `npm run dev` - Run extension in development mode
 
 ### Technologies Used
 
-- **[Bun](https://bun.sh/)** - Fast JavaScript runtime and package manager
+- **[Node.js](https://nodejs.org/)** - JavaScript runtime
+- **[npm](https://www.npmjs.com/)** - Package manager
 - **[Effect](https://effect.website/)** - Functional programming library for TypeScript
-- **[Commander](https://github.com/tj/commander.js/)** - CLI framework
-- **[Chalk](https://github.com/chalk/chalk)** - Terminal string styling
-- **[cli-table3](https://github.com/cli-table/cli-table3)** - Pretty table formatting for CLI
-- **[Axios](https://axios-http.com/)** - HTTP client
+- **[Raycast API](https://developers.raycast.com/)** - For building the Raycast extension
+- **[React](https://reactjs.org/)** - For Raycast extension UI components
+- **[Axios](https://axios-http.com/)** - HTTP client for API requests
 
 ## API Requirements
 
-To use this tool, you need to:
+To use this extension, you need to:
 
 1. Create a Bitvavo account
 2. Enable API access in your account settings
 3. Generate an API key and secret
-4. Ensure your API key has permission to read balances and trades
+4. Configure the credentials in Raycast extension preferences
+5. Ensure your API key has permission to read balances and trades
 
 ## Security
 
-- Never commit your API credentials to version control
-- Use environment variables or a `.env` file for credentials
-- Keep your API secret secure and never share it
+- API credentials are securely stored in Raycast preferences
+- Never share your API credentials
+- Keep your API secret secure and never commit it to version control
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Test thoroughly with `npm run dev`
 5. Submit a pull request
 
 ## License

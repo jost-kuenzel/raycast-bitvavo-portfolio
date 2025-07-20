@@ -7,63 +7,25 @@ import {
   getPreferenceValues,
   showToast,
   Toast,
-  Color,
-  Image,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
 import { Effect, Runtime } from "effect";
 import { createBitvavoClientLayer } from "./lib/bitvavo-client.js";
 import { AssetAnalyzer } from "./lib/asset-analyzer.js";
 import type { AssetSummary } from "./types/bitvavo.js";
+import {
+  formatNumber,
+  formatSignedCurrencyWithColor,
+  formatSignedNumberWithColor,
+  getCryptocurrencyIcon,
+  getCurrencySymbolFromMarket,
+  formatMarketDisplay,
+} from "./lib/utils.js";
 
 interface Preferences {
   bitvavoApiKey: string;
   bitvavoApiSecret: string;
 }
-
-const formatNumber = (value: number) => {
-  return new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-};
-
-const formatSignedNumber = (value: number) => {
-  const formattedValue = formatNumber(Math.abs(value));
-  return value >= 0 ? `+ ${formattedValue}` : `- ${formattedValue}`;
-};
-
-const formatSignedCurrencyWithColor = (
-  value: number,
-  currencySymbol: string,
-) => {
-  const formattedValue = formatNumber(Math.abs(value));
-  const color = value >= 0 ? Color.Green : Color.Red;
-  const sign = value >= 0 ? "+ " : "- ";
-  return { color, value: `${sign}${currencySymbol}${formattedValue}` };
-};
-
-const formatSignedNumberWithColor = (value: number) => {
-  const formattedValue = formatNumber(Math.abs(value));
-  const color = value >= 0 ? Color.Green : Color.Red;
-  const sign = value >= 0 ? "+ " : "- ";
-  return { color, value: `${sign}${formattedValue}` };
-};
-
-// Helper function to get cryptocurrency icon URL
-const getCryptocurrencyIcon = (symbol: string) => {
-  // Use the jsdelivr CDN to serve icons from cryptocurrency-icons package
-  const baseUrl =
-    "https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/svg/color";
-  const iconUrl = `${baseUrl}/${symbol.toLowerCase()}.svg`;
-
-  // Return the icon with a fallback to a generic cryptocurrency icon and circular mask
-  return {
-    source: iconUrl,
-    fallback: `${baseUrl}/generic.svg`,
-    mask: Image.Mask.Circle,
-  };
-};
 
 export default function Portfolio() {
   const [assets, setAssets] = useState<AssetSummary[]>([]);
@@ -138,17 +100,6 @@ export default function Portfolio() {
   const sortedAssets = [...assets].sort((a, b) =>
     a.symbol.localeCompare(b.symbol),
   );
-
-  // Helper function to get currency symbol from market
-  const getCurrencySymbolFromMarket = (market: string) => {
-    if (market.endsWith("-USDC")) return "$";
-    return "€"; // Default to EUR
-  };
-
-  // Helper function to format market display
-  const formatMarketDisplay = (market: string) => {
-    return market.replace("-", " / ");
-  };
 
   return (
     <List
