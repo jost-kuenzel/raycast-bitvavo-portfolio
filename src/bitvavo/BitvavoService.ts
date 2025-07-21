@@ -49,39 +49,28 @@ export class BitvavoService extends Effect.Service<BitvavoService>()(
       /**
        *
        */
-      const getTrades = () =>
-        pipe(
-          // @todo need to load the marekt dynamically
-          Effect.forEach(
-            ['BTC-EUR', 'XRP-EUR', 'ETH-EUR'],
-            market =>
-              Effect.gen(function* () {
-                const method = 'GET'
-                // @todo use stream paginaton
-                const endpoint = `/trades?market=${market}&limit=100`
-                const headers = yield* createAuthHeaders('GET', endpoint)
+      const getTrades = (market: string) =>
+        Effect.gen(function* () {
+          const method = 'GET'
+          // @todo use stream paginaton
+          const endpoint = `/trades?market=${market}&limit=100`
+          const headers = yield* createAuthHeaders('GET', endpoint)
 
-                return yield* pipe(
-                  client.get(`${BITVAVO_API_BASE}${endpoint}`, { headers }),
-                  Effect.retry(retrySchedule),
-                  Effect.andThen(HttpClientResponse.schemaBodyJson(Trades)),
-                  Effect.catchAll(
-                    error =>
-                      new BitvavoApiError({
-                        method,
-                        endpoint,
-                        message: error.message,
-                      }),
-                  ),
-                  Effect.andThen(
-                    Array.sortWith(_ => _.timestamp, Order.number),
-                  ),
-                )
-              }),
-            { concurrency: 10 },
-          ),
-          Effect.andThen(Array.flatten),
-        )
+          return yield* pipe(
+            client.get(`${BITVAVO_API_BASE}${endpoint}`, { headers }),
+            Effect.retry(retrySchedule),
+            Effect.andThen(HttpClientResponse.schemaBodyJson(Trades)),
+            Effect.catchAll(
+              error =>
+                new BitvavoApiError({
+                  method,
+                  endpoint,
+                  message: error.message,
+                }),
+            ),
+            Effect.andThen(Array.sortWith(_ => _.timestamp, Order.number)),
+          )
+        })
 
       /**
        *

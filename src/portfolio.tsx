@@ -1,3 +1,4 @@
+import { FetchHttpClient } from '@effect/platform'
 import {
   Action,
   ActionPanel,
@@ -8,10 +9,11 @@ import {
   showToast,
   Toast,
 } from '@raycast/api'
-import { ConfigProvider, Effect, Layer, pipe } from 'effect'
+import { ConfigProvider, Effect, Layer } from 'effect'
 import { useEffect, useState } from 'react'
-import { AssetAnalyzer } from './asset-analyzer.js'
-import { BitvavoService } from './bitvavo/service.js'
+import { BitvavoService } from './bitvavo/BitvavoService.js'
+import { PortfolioService } from './bitvavo/PortfolioService.js'
+import type { AssetSummary } from './types.js'
 import {
   formatMarketDisplay,
   formatNumber,
@@ -20,8 +22,6 @@ import {
   getCryptocurrencyIcon,
   getCurrencySymbolFromMarket,
 } from './utils.js'
-import type { AssetSummary } from './types.js'
-import { FetchHttpClient } from '@effect/platform'
 
 interface Preferences {
   bitvavoApiKey: string
@@ -40,7 +40,7 @@ export default function Portfolio() {
       setIsLoading(true)
       setError(null)
 
-      const fetchedAssets = yield* AssetAnalyzer.analyzeAssets()
+      const fetchedAssets = yield* PortfolioService.getAssets()
 
       setAssets(fetchedAssets)
       setIsLoading(false)
@@ -66,7 +66,7 @@ export default function Portfolio() {
           Layer.mergeAll(
             FetchHttpClient.layer,
             BitvavoService.Default,
-            AssetAnalyzer.Default,
+            PortfolioService.Default,
           ),
         ),
         Effect.withConfigProvider(
