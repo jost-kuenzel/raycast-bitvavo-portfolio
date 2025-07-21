@@ -1,6 +1,6 @@
-import { Effect } from 'effect'
-import type { AssetSummary, BitvavoBalance, BitvavoTrade } from './types.js'
+import { Array, Effect } from 'effect'
 import { BitvavoService } from './bitvavo/service.js'
+import type { AssetSummary, BitvavoBalance, BitvavoTrade } from './types.js'
 
 export class AssetAnalyzer extends Effect.Service<AssetAnalyzer>()(
   'coiny/AssetAnalyzer',
@@ -8,31 +8,28 @@ export class AssetAnalyzer extends Effect.Service<AssetAnalyzer>()(
     accessors: true,
     dependencies: [BitvavoService.Default],
     effect: Effect.gen(function* () {
+      const bitvavo = yield* BitvavoService
+
       const analyzeAssets = () =>
         Effect.gen(function* () {
-          const bitvavo = yield* BitvavoService
-
           // Get current balances
-          const balances = yield* bitvavo.getBalances()
-
-          // Filter out zero balances and fiat currencies
-          const cryptoBalances = balances.filter(
-            balance =>
-              parseFloat(balance.available) > 0 &&
-              !['EUR', 'USD'].includes(balance.symbol),
-          )
-
-          if (cryptoBalances.length === 0) {
-            return []
-          }
-
           // Get all trades for analysis
-          const allTrades = yield* bitvavo.getTrades()
+          const [balances, allTrades] = yield* Effect.all(
+            [bitvavo.getBalances(), bitvavo.getTrades()],
+            { concurrency: 'unbounded' },
+          )
+          console.log(balances, allTrades)
+
+          // Filter out EUR
+          const balancesWithoutEur = Array.filter(
+            balances,
+            _ => _.symbol != 'EUR',
+          )
 
           // Get current prices for all assets
           const summaries = yield* Effect.forEach(
-            cryptoBalances,
-            balance => analyzeAsset(balance, allTrades, bitvavo),
+            balancesWithoutEur,
+            analyzeAsset(allTrades),
             { concurrency: 'unbounded' },
           )
 
@@ -40,78 +37,76 @@ export class AssetAnalyzer extends Effect.Service<AssetAnalyzer>()(
         })
 
       // Helper function to analyze a single asset
-      const analyzeAsset = (
-        balance: BitvavoBalance,
-        allTrades: BitvavoTrade[],
-        client: typeof BitvavoService.Service,
-      ): Effect.Effect<AssetSummary, Error> =>
-        Effect.gen(function* () {
-          const symbol = balance.symbol
-          const currentBalance =
-            parseFloat(balance.available) + parseFloat(balance.inOrder)
+      const analyzeAsset =
+        (allTrades: BitvavoTrade[]) =>
+        (balance: BitvavoBalance): Effect.Effect<AssetSummary, Error> =>
+          Effect.gen(function* () {
+            const symbol = balance.symbol
+            const currentBalance =
+              parseFloat(balance.available) + parseFloat(balance.inOrder)
 
-          // Filter trades for this asset and determine the market
-          const assetTrades = allTrades.filter(
-            trade =>
-              trade.market === `${symbol}-EUR` ||
-              trade.market === `${symbol}-USDC`,
-          )
-
-          // Determine the market from trades or default to EUR
-          let market = `${symbol}-EUR`
-          if (assetTrades.length > 0) {
-            // Use the market from the most recent trade
-            const sortedTrades = assetTrades.sort(
-              (a, b) => b.timestamp - a.timestamp,
+            // Filter trades for this asset and determine the market
+            const assetTrades = allTrades.filter(
+              trade =>
+                trade.market === `${symbol}-EUR` ||
+                trade.market === `${symbol}-USDC`,
             )
-            const mostRecentTrade = sortedTrades[0]
-            if (mostRecentTrade) {
-              market = mostRecentTrade.market
+
+            // Determine the market from trades or default to EUR
+            let market = `${symbol}-EUR`
+            if (assetTrades.length > 0) {
+              // Use the market from the most recent trade
+              const sortedTrades = assetTrades.sort(
+                (a, b) => b.timestamp - a.timestamp,
+              )
+              const mostRecentTrade = sortedTrades[0]
+              if (mostRecentTrade) {
+                market = mostRecentTrade.market
+              }
+            } else {
+              // If no trades, check if USDC market exists by trying to get ticker
+              try {
+                yield* bitvavo.getTicker(`${symbol}-USDC`)
+                market = `${symbol}-USDC`
+              } catch {
+                // Default to EUR if USDC ticker fails
+                market = `${symbol}-EUR`
+              }
             }
-          } else {
-            // If no trades, check if USDC market exists by trying to get ticker
-            try {
-              yield* client.getTicker(`${symbol}-USDC`)
-              market = `${symbol}-USDC`
-            } catch {
-              // Default to EUR if USDC ticker fails
-              market = `${symbol}-EUR`
+
+            // Calculate purchase and sale totals
+            const { totalPurchased, totalSold, totalInvested, totalReceived } =
+              calculateTradeTotals(assetTrades)
+
+            // Calculate average buy price
+            const averageBuyPrice =
+              totalPurchased > 0 ? totalInvested / totalPurchased : 0
+
+            // Get current price
+            const ticker = yield* bitvavo.getTicker(market)
+            const currentPrice = parseFloat(ticker.price)
+
+            // Calculate current value and gains/losses
+            const totalValue = currentBalance * currentPrice
+            const netInvestment = totalInvested - totalReceived
+            const gainLoss = totalValue - netInvestment
+            const gainLossPercent =
+              netInvestment > 0 ? (gainLoss / netInvestment) * 100 : 0
+
+            return {
+              symbol,
+              market,
+              currentBalance,
+              totalPurchased,
+              totalSold,
+              averageBuyPrice,
+              currentPrice,
+              totalValue,
+              totalInvested: netInvestment,
+              gainLoss,
+              gainLossPercent,
             }
-          }
-
-          // Calculate purchase and sale totals
-          const { totalPurchased, totalSold, totalInvested, totalReceived } =
-            calculateTradeTotals(assetTrades)
-
-          // Calculate average buy price
-          const averageBuyPrice =
-            totalPurchased > 0 ? totalInvested / totalPurchased : 0
-
-          // Get current price
-          const ticker = yield* client.getTicker(market)
-          const currentPrice = parseFloat(ticker.price)
-
-          // Calculate current value and gains/losses
-          const totalValue = currentBalance * currentPrice
-          const netInvestment = totalInvested - totalReceived
-          const gainLoss = totalValue - netInvestment
-          const gainLossPercent =
-            netInvestment > 0 ? (gainLoss / netInvestment) * 100 : 0
-
-          return {
-            symbol,
-            market,
-            currentBalance,
-            totalPurchased,
-            totalSold,
-            averageBuyPrice,
-            currentPrice,
-            totalValue,
-            totalInvested: netInvestment,
-            gainLoss,
-            gainLossPercent,
-          }
-        })
+          })
 
       // Helper function to calculate trade totals
       const calculateTradeTotals = (trades: BitvavoTrade[]) => {
