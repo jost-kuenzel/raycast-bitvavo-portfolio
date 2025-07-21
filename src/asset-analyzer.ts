@@ -1,25 +1,19 @@
 import { Effect } from 'effect'
-import type {
-  AssetSummary,
-  BitvavoBalance,
-  BitvavoTrade,
-} from '../types/bitvavo.js'
-import { BitvavoClient } from './bitvavo-client.js'
+import type { AssetSummary, BitvavoBalance, BitvavoTrade } from './types.js'
+import { BitvavoService } from './bitvavo/service.js'
 
 export class AssetAnalyzer extends Effect.Service<AssetAnalyzer>()(
   'coiny/AssetAnalyzer',
   {
     accessors: true,
-    dependencies: [BitvavoClient.Default],
+    dependencies: [BitvavoService.Default],
     effect: Effect.gen(function* () {
-      const client = yield* BitvavoClient
-
       const analyzeAssets = () =>
         Effect.gen(function* () {
-          const client = yield* BitvavoClient
+          const bitvavo = yield* BitvavoService
 
           // Get current balances
-          const balances = yield* client.getBalances
+          const balances = yield* bitvavo.getBalances()
 
           // Filter out zero balances and fiat currencies
           const cryptoBalances = balances.filter(
@@ -33,12 +27,12 @@ export class AssetAnalyzer extends Effect.Service<AssetAnalyzer>()(
           }
 
           // Get all trades for analysis
-          const allTrades = yield* client.getTrades()
+          const allTrades = yield* bitvavo.getTrades()
 
           // Get current prices for all assets
           const summaries = yield* Effect.forEach(
             cryptoBalances,
-            balance => analyzeAsset(balance, allTrades, client),
+            balance => analyzeAsset(balance, allTrades, bitvavo),
             { concurrency: 'unbounded' },
           )
 
@@ -49,7 +43,7 @@ export class AssetAnalyzer extends Effect.Service<AssetAnalyzer>()(
       const analyzeAsset = (
         balance: BitvavoBalance,
         allTrades: BitvavoTrade[],
-        client: typeof BitvavoClient.Service,
+        client: typeof BitvavoService.Service,
       ): Effect.Effect<AssetSummary, Error> =>
         Effect.gen(function* () {
           const symbol = balance.symbol

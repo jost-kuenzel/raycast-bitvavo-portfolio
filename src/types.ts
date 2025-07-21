@@ -39,8 +39,3 @@ export interface AssetSummary {
   gainLoss: number
   gainLossPercent: number
 }
-
-export interface BitvavoCredentials {
-  apiKey: string
-  apiSecret: string
-}

@@ -10,8 +10,8 @@ import {
 } from '@raycast/api'
 import { ConfigProvider, Effect, Layer, pipe } from 'effect'
 import { useEffect, useState } from 'react'
-import { AssetAnalyzer } from './lib/asset-analyzer.js'
-import { BitvavoClient } from './lib/bitvavo-client.js'
+import { AssetAnalyzer } from './asset-analyzer.js'
+import { BitvavoService } from './bitvavo/service.js'
 import {
   formatMarketDisplay,
   formatNumber,
@@ -19,8 +19,9 @@ import {
   formatSignedNumberWithColor,
   getCryptocurrencyIcon,
   getCurrencySymbolFromMarket,
-} from './lib/utils.js'
-import type { AssetSummary } from './types/bitvavo.js'
+} from './utils.js'
+import type { AssetSummary } from './types.js'
+import { FetchHttpClient } from '@effect/platform'
 
 interface Preferences {
   bitvavoApiKey: string
@@ -32,29 +33,46 @@ export default function Portfolio() {
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
-  const loadPortfolio = async () => {
-    try {
+  const preferences = getPreferenceValues<Preferences>()
+
+  const loadPortfolio = async () =>
+    Effect.gen(function* () {
       setIsLoading(true)
       setError(null)
 
-      const preferences = getPreferenceValues<Preferences>()
+      const fetchedAssets = yield* AssetAnalyzer.analyzeAssets()
 
-      if (!preferences.bitvavoApiKey || !preferences.bitvavoApiSecret) {
-        setError(
-          'Please configure your Bitvavo API credentials in extension preferences',
-        )
-        setIsLoading(false)
-        return
-      }
-
-      const fetchedAssets = await pipe(
-        AssetAnalyzer.analyzeAssets(),
+      setAssets(fetchedAssets)
+      setIsLoading(false)
+    })
+      .pipe(
+        // error handling
+        Effect.catchAll(error => {
+          setIsLoading(false)
+          setError(error.message)
+          console.error(error)
+          return Effect.promise(() =>
+            showToast({
+              style: Toast.Style.Failure,
+              title: 'Error loading portfolio',
+              message: error instanceof Error ? error.message : 'Unknown error',
+            }),
+          )
+        }),
+      )
+      .pipe(
+        // running
         Effect.provide(
-          Layer.mergeAll(BitvavoClient.Default, AssetAnalyzer.Default),
+          Layer.mergeAll(
+            FetchHttpClient.layer,
+            BitvavoService.Default,
+            AssetAnalyzer.Default,
+          ),
         ),
         Effect.withConfigProvider(
           ConfigProvider.fromMap(
             new Map<string, string>([
+              ['BITVAVO_API_BASE', 'https://api.bitvavo.com/v2'],
               ['BITVAVO_API_KEY', preferences.bitvavoApiKey],
               ['BITVAVO_API_SECRET', preferences.bitvavoApiSecret],
             ]),
@@ -62,20 +80,6 @@ export default function Portfolio() {
         ),
         Effect.runPromise,
       )
-
-      setAssets(fetchedAssets)
-    } catch (err) {
-      console.error('Error loading portfolio:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load portfolio')
-      await showToast({
-        style: Toast.Style.Failure,
-        title: 'Error loading portfolio',
-        message: err instanceof Error ? err.message : 'Unknown error',
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   useEffect(() => {
     loadPortfolio()
