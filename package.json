@@ -3,7 +3,7 @@
   "title": "Bitvavo Portfolio Viewer",
   "version": "1.0.0",
   "description": "View your Bitvavo cryptocurrency portfolio overview with gains/losses",
-  "icon": "icon.svg",
+  "icon": "icon.png",
   "author": "Jost Künzel",
   "categories": [
     "Other"
