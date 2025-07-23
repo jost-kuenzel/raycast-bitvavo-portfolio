@@ -15,9 +15,6 @@ export interface BitvavoTrade {
   fee: string
   feeCurrency: string
   settled: boolean
-  // Additional fields for proper calculation
-  sentAmount?: string
-  receivedAmount?: string
 }
 
 export interface BitvavoTicker {
@@ -29,9 +26,7 @@ export interface BitvavoTicker {
 export interface AssetSummary {
   symbol: string
   market: string
-  currentBalance: number
-  totalPurchased: number
-  totalSold: number
+  balance: number
   averageBuyPrice: number
   currentPrice: number
   totalValue: number

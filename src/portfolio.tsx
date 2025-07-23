@@ -120,6 +120,11 @@ export default function Portfolio() {
             key={asset.symbol}
             title={formatMarketDisplay(asset.market)}
             icon={iconPath}
+            accessories={[
+              {
+                text: `${currencySymbol}${formatNumber(asset.currentPrice)}`,
+              },
+            ]}
             detail={
               <List.Item.Detail
                 metadata={
@@ -139,7 +144,7 @@ export default function Portfolio() {
                     />
                     <List.Item.Detail.Metadata.Label
                       title="Balance"
-                      text={asset.currentBalance.toString()}
+                      text={asset.balance.toString()}
                     />
                     <List.Item.Detail.Metadata.Separator />
                     <List.Item.Detail.Metadata.Label

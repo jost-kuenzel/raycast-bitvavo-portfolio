@@ -1,6 +1,8 @@
 import { Array, Effect, pipe } from 'effect'
-import type { AssetSummary, BitvavoBalance, BitvavoTrade } from '../types.js'
+import type { BitvavoBalance } from '../types.js'
 import { BitvavoService } from './BitvavoService.js'
+import { plus, times, divide, enableBoundaryChecking } from 'number-precision'
+enableBoundaryChecking(false)
 
 export class PortfolioService extends Effect.Service<PortfolioService>()(
   'coiny/PortfolioService',
@@ -30,19 +32,29 @@ export class PortfolioService extends Effect.Service<PortfolioService>()(
         Effect.gen(function* () {
           const symbol = balance.symbol
           const market = `${symbol}-EUR`
-          const currentBalance =
-            parseFloat(balance.available) + parseFloat(balance.inOrder)
+          const currentBalance = parseFloat(balance.available)
 
           // Filter trades for this asset and determine the market
           const assetTrades = yield* bitvavo.getTrades(`${symbol}-EUR`)
 
-          // Calculate purchase and sale totals
-          const { totalPurchased, totalSold, totalInvested, totalReceived } =
-            calculateTradeTotals(assetTrades)
+          // Calculate total purchased
+          const totalPurchased = Array.reduce(assetTrades, 0, (acc, trade) =>
+            plus(acc, trade.side === 'buy' ? parseFloat(trade.amount) : 0),
+          )
+
+          // Calculate total invested
+          const totalInvested = Array.reduce(assetTrades, 0, (acc, trade) =>
+            plus(
+              acc,
+              trade.side === 'buy'
+                ? times(parseFloat(trade.amount), parseFloat(trade.price))
+                : 0,
+            ),
+          )
 
           // Calculate average buy price
           const averageBuyPrice =
-            totalPurchased > 0 ? totalInvested / totalPurchased : 0
+            totalPurchased > 0 ? divide(totalInvested, totalPurchased) : 0
 
           // Get current price
           const ticker = yield* bitvavo.getTicker(market)
@@ -50,51 +62,22 @@ export class PortfolioService extends Effect.Service<PortfolioService>()(
 
           // Calculate current value and gains/losses
           const totalValue = currentBalance * currentPrice
-          const netInvestment = totalInvested - totalReceived
-          const gainLoss = totalValue - netInvestment
+          const gainLoss = totalValue - totalInvested
           const gainLossPercent =
-            netInvestment > 0 ? (gainLoss / netInvestment) * 100 : 0
+            totalInvested > 0 ? times(divide(gainLoss, totalInvested), 100) : 0
 
           return {
             symbol,
             market,
-            currentBalance,
-            totalPurchased,
-            totalSold,
+            balance: currentBalance,
             averageBuyPrice,
             currentPrice,
             totalValue,
-            totalInvested: netInvestment,
+            totalInvested,
             gainLoss,
             gainLossPercent,
           }
         })
-
-      // Helper function to calculate trade totals
-      const calculateTradeTotals = (trades: BitvavoTrade[]) =>
-        trades.reduce(
-          (acc, trade) => {
-            const amount = parseFloat(trade.amount)
-
-            if (trade.side === 'buy') {
-              acc.totalPurchased += amount
-              // Use sentAmount (EUR spent) for totalInvested instead of amount * price
-              acc.totalInvested += parseFloat(trade.sentAmount || '0')
-            } else {
-              acc.totalSold += amount
-              // Use receivedAmount (EUR received) for totalReceived
-              acc.totalReceived += parseFloat(trade.receivedAmount || '0')
-            }
-
-            return acc
-          },
-          {
-            totalPurchased: 0,
-            totalSold: 0,
-            totalInvested: 0,
-            totalReceived: 0,
-          },
-        )
 
       return {
         getAssets,

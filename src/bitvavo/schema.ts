@@ -23,127 +23,88 @@ export const Balance = Schema.Array(
   }),
 )
 
-export const TradeApi = Schema.Struct({
-  id: Schema.String.pipe(
-    Schema.annotations({
-      description: 'The identifier of the fill, unique per market.',
-      example: '108c3633-0276-4480-a902-17a01829deae',
-    }),
-  ),
-  orderId: Schema.String.pipe(
-    Schema.annotations({
-      description: 'Bitvavo identifier of the order that was filled.',
-      example: '1d671998-3d44-4df4-965f-0d48bd129a1b',
-    }),
-  ),
-  clientOrderId: Schema.optional(
-    Schema.String.pipe(
+export const Trades = Schema.Array(
+  Schema.Struct({
+    id: Schema.String.pipe(
       Schema.annotations({
-        description: 'Your identifier of the order that was filled.',
-        example: '2be7d0df-d8dc-7b93-a550-8876f3b393e9',
+        description: 'The identifier of the fill, unique per market.',
+        example: '108c3633-0276-4480-a902-17a01829deae',
       }),
     ),
-  ),
-  timestamp: Schema.Number.pipe(
-    Schema.annotations({
-      description: 'The Unix timestamp when the trade was made.',
-      example: 1542967486256,
-    }),
-  ),
-  market: Schema.String.pipe(
-    Schema.annotations({
-      description: 'The market for which to return past trades.',
-      example: 'BTC-EUR',
-    }),
-  ),
-  side: Schema.Literal('sell', 'buy').pipe(
-    Schema.annotations({
-      description:
-        'Indicates if the taker, who filled the order, is selling or buying.',
-      example: 'buy',
-    }),
-  ),
-  amount: Schema.String.pipe(
-    Schema.annotations({
-      description: 'The amount of base currency exchanged in the trade.',
-      example: '0.005',
-    }),
-  ),
-  price: Schema.String.pipe(
-    Schema.annotations({
-      description:
-        'The price of 1 unit of base currency in the amount of quote currency at the time of the trade.',
-      example: '5000.1',
-    }),
-  ),
-  taker: Schema.Boolean.pipe(
-    Schema.annotations({
-      description:
-        'Indicates whether you are the taker for the fill. If true, you are the one who placed the order that was filled by another party.',
-      example: true,
-    }),
-  ),
-  fee: Schema.String.pipe(
-    Schema.annotations({
-      description:
-        'The fee that was paid. Value is negative for rebates. Only available if settled is true.',
-      example: '0.03',
-    }),
-  ),
-  feeCurrency: Schema.String.pipe(
-    Schema.annotations({
-      description:
-        'Currency in which the fee was paid. Only available if settled is true.',
-      example: 'EUR',
-    }),
-  ),
-  settled: Schema.Boolean.pipe(
-    Schema.annotations({
-      description:
-        'Indicates whether the fee was deducted and the exchanged currency is available for further trading.',
-      example: true,
-    }),
-  ),
-})
-
-export const Trade = Schema.Struct({
-  ...TradeApi.fields,
-  sentAmount: Schema.String.pipe(
-    Schema.annotations({
-      description: 'Amount sent in the trade, used for buy trades.',
-      example: '5000.5',
-    }),
-  ),
-  receivedAmount: Schema.String.pipe(
-    Schema.annotations({
-      description: 'Amount received in the trade, used for sell trades.',
-      example: '0.005',
-    }),
-  ),
-})
-
-export const Trades = Schema.Array(
-  Schema.transformOrFail(TradeApi, Trade, {
-    decode: trade =>
-      Effect.succeed({
-        ...trade,
-        sentAmount:
-          trade.side === 'buy'
-            ? (parseFloat(trade.amount) * parseFloat(trade.price)).toString()
-            : trade.amount,
-        receivedAmount:
-          trade.side === 'buy'
-            ? trade.amount
-            : (parseFloat(trade.amount) * parseFloat(trade.price)).toString(),
+    orderId: Schema.String.pipe(
+      Schema.annotations({
+        description: 'Bitvavo identifier of the order that was filled.',
+        example: '1d671998-3d44-4df4-965f-0d48bd129a1b',
       }),
-    encode: (input, options, ast) =>
-      ParseResult.fail(
-        new ParseResult.Forbidden(
-          ast,
-          input,
-          'Encoding Producer is forbidden.',
-        ),
+    ),
+    clientOrderId: Schema.optional(
+      Schema.String.pipe(
+        Schema.annotations({
+          description: 'Your identifier of the order that was filled.',
+          example: '2be7d0df-d8dc-7b93-a550-8876f3b393e9',
+        }),
       ),
+    ),
+    timestamp: Schema.Number.pipe(
+      Schema.annotations({
+        description: 'The Unix timestamp when the trade was made.',
+        example: 1542967486256,
+      }),
+    ),
+    market: Schema.String.pipe(
+      Schema.annotations({
+        description: 'The market for which to return past trades.',
+        example: 'BTC-EUR',
+      }),
+    ),
+    side: Schema.Literal('sell', 'buy').pipe(
+      Schema.annotations({
+        description:
+          'Indicates if the taker, who filled the order, is selling or buying.',
+        example: 'buy',
+      }),
+    ),
+    amount: Schema.String.pipe(
+      Schema.annotations({
+        description: 'The amount of base currency exchanged in the trade.',
+        example: '0.005',
+      }),
+    ),
+    price: Schema.String.pipe(
+      Schema.annotations({
+        description:
+          'The price of 1 unit of base currency in the amount of quote currency at the time of the trade.',
+        example: '5000.1',
+      }),
+    ),
+    taker: Schema.Boolean.pipe(
+      Schema.annotations({
+        description:
+          'Indicates whether you are the taker for the fill. If true, you are the one who placed the order that was filled by another party.',
+        example: true,
+      }),
+    ),
+    fee: Schema.String.pipe(
+      Schema.annotations({
+        description:
+          'The fee that was paid. Value is negative for rebates. Only available if settled is true.',
+        example: '0.03',
+      }),
+    ),
+    feeCurrency: Schema.String.pipe(
+      Schema.annotations({
+        description:
+          'Currency in which the fee was paid. Only available if settled is true.',
+        example: 'EUR',
+      }),
+    ),
+    settled: Schema.Boolean.pipe(
+      Schema.annotations({
+        description:
+          'Indicates whether the fee was deducted and the exchanged currency is available for further trading.',
+        example: true,
+      }),
+    ),
   }),
 ).pipe(
   Schema.annotations({
