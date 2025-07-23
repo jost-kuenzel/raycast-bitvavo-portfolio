@@ -1,7 +1,7 @@
 import { Array, Effect, pipe } from 'effect'
-import type { BitvavoBalance } from '../types.js'
 import { BitvavoService } from './BitvavoService.js'
 import { plus, times, divide, enableBoundaryChecking } from 'number-precision'
+import { Asset, Summary, Balance } from './schema.js'
 enableBoundaryChecking(false)
 
 export class PortfolioService extends Effect.Service<PortfolioService>()(
@@ -12,7 +12,7 @@ export class PortfolioService extends Effect.Service<PortfolioService>()(
     effect: Effect.gen(function* () {
       const bitvavo = yield* BitvavoService
 
-      const getAssets = () =>
+      const getAssetSummary = () =>
         Effect.gen(function* () {
           // Get balances
           const balances = yield* pipe(
@@ -20,15 +20,36 @@ export class PortfolioService extends Effect.Service<PortfolioService>()(
             Effect.andThen(Array.filter(_ => _.symbol != 'EUR')),
           )
 
-          const summaries = yield* Effect.forEach(balances, summarize, {
+          const assets = yield* Effect.forEach(balances, buildAsset, {
             concurrency: 'unbounded',
           })
 
-          return summaries
+          const invested = Array.reduce(assets, 0, (acc, asset) =>
+            plus(acc, asset.totalInvested),
+          )
+          const currentValue = Array.reduce(assets, 0, (acc, asset) =>
+            plus(acc, asset.totalValue),
+          )
+          const gainLoss = Array.reduce(assets, 0, (acc, asset) =>
+            plus(acc, asset.gainLoss),
+          )
+          const gainLossPercent = Array.reduce(assets, 0, (acc, asset) =>
+            plus(acc, asset.gainLossPercent),
+          )
+
+          return Summary.make({
+            totals: {
+              invested,
+              currentValue,
+              gainLoss,
+              gainLossPercent,
+            },
+            assets: assets,
+          })
         })
 
       // Helper function to analyze a single asset
-      const summarize = (balance: BitvavoBalance) =>
+      const buildAsset = (balance: (typeof Balance.Type)[number]) =>
         Effect.gen(function* () {
           const symbol = balance.symbol
           const market = `${symbol}-EUR`
@@ -74,7 +95,7 @@ export class PortfolioService extends Effect.Service<PortfolioService>()(
           const gainLossPercent =
             totalInvested > 0 ? times(divide(gainLoss, totalInvested), 100) : 0
 
-          return {
+          return Asset.make({
             symbol,
             market,
             currentBalance,
@@ -84,11 +105,11 @@ export class PortfolioService extends Effect.Service<PortfolioService>()(
             totalInvested,
             gainLoss,
             gainLossPercent,
-          }
+          })
         })
 
       return {
-        getAssets,
+        getAssetSummary,
       }
     }),
   },

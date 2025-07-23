@@ -13,7 +13,9 @@ import { ConfigProvider, Effect, Layer } from 'effect'
 import { useEffect, useState } from 'react'
 import { BitvavoService } from './bitvavo/BitvavoService.js'
 import { PortfolioService } from './bitvavo/PortfolioService.js'
-import type { AssetSummary } from './types.js'
+import type { Summary } from './bitvavo/schema.js'
+
+type SummaryType = typeof Summary.Type
 import {
   formatMarketDisplay,
   formatNumber,
@@ -29,7 +31,7 @@ interface Preferences {
 }
 
 export default function Portfolio() {
-  const [assets, setAssets] = useState<AssetSummary[]>([])
+  const [summary, setSummary] = useState<SummaryType | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -40,9 +42,9 @@ export default function Portfolio() {
       setIsLoading(true)
       setError(null)
 
-      const fetchedAssets = yield* PortfolioService.getAssets()
+      const fetchedSummary = yield* PortfolioService.getAssetSummary()
 
-      setAssets(fetchedAssets)
+      setSummary(fetchedSummary)
       setIsLoading(false)
     })
       .pipe(
@@ -102,9 +104,9 @@ export default function Portfolio() {
     )
   }
 
-  const sortedAssets = [...assets].sort((a, b) =>
-    a.symbol.localeCompare(b.symbol),
-  )
+  const sortedAssets = summary
+    ? [...summary.assets].sort((a, b) => a.symbol.localeCompare(b.symbol))
+    : []
 
   return (
     <List
@@ -178,7 +180,7 @@ export default function Portfolio() {
           />
         )
       })}
-      {!isLoading && (
+      {!isLoading && summary && (
         <List.Item
           key="totals"
           title="Totals"
@@ -188,40 +190,25 @@ export default function Portfolio() {
                 <List.Item.Detail.Metadata>
                   <List.Item.Detail.Metadata.Label
                     title="Total Value"
-                    text={`€${formatNumber(
-                      assets
-                        .filter(asset => asset.market.endsWith('-EUR'))
-                        .reduce((sum, asset) => sum + asset.totalValue, 0),
-                    )}`}
+                    text={`€${formatNumber(summary.totals.currentValue)}`}
                   />
                   <List.Item.Detail.Metadata.Separator />
                   <List.Item.Detail.Metadata.Label
                     title="Invested"
-                    text={`€${formatNumber(
-                      assets
-                        .filter(asset => asset.market.endsWith('-EUR'))
-                        .reduce((sum, asset) => sum + asset.totalInvested, 0),
-                    )}`}
+                    text={`€${formatNumber(summary.totals.invested)}`}
                   />
                   <List.Item.Detail.Metadata.Separator />
                   <List.Item.Detail.Metadata.Label
                     title="Gain/Loss"
                     text={formatSignedCurrencyWithColor(
-                      assets
-                        .filter(asset => asset.market.endsWith('-EUR'))
-                        .reduce((sum, asset) => sum + asset.gainLoss, 0),
+                      summary.totals.gainLoss,
                       '€',
                     )}
                   />
                   <List.Item.Detail.Metadata.Label
-                    title="Gain/Loss % (Avg)"
+                    title="Gain/Loss %"
                     text={formatSignedNumberWithColor(
-                      assets.length > 0
-                        ? assets.reduce(
-                            (sum, asset) => sum + asset.gainLossPercent,
-                            0,
-                          ) / assets.length
-                        : 0,
+                      summary.totals.gainLossPercent,
                     )}
                   />
                 </List.Item.Detail.Metadata>

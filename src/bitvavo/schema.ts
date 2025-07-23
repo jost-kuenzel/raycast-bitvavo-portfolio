@@ -1,4 +1,4 @@
-import { Effect, ParseResult, Schema } from 'effect'
+import { Schema } from 'effect'
 
 export const Balance = Schema.Array(
   Schema.Struct({
@@ -127,3 +127,104 @@ export const TickerPrice = Schema.Struct({
     }),
   ),
 })
+
+export const Asset = Schema.Struct({
+  symbol: Schema.String.pipe(
+    Schema.annotations({
+      description: 'The asset symbol.',
+      example: 'BTC',
+    }),
+  ),
+  market: Schema.String.pipe(
+    Schema.annotations({
+      description: 'The market for the asset.',
+      example: 'BTC-EUR',
+    }),
+  ),
+  currentBalance: Schema.Number.pipe(
+    Schema.annotations({
+      description: 'The current balance of the asset.',
+      example: 1.5,
+    }),
+  ),
+  averageBuyPrice: Schema.Number.pipe(
+    Schema.annotations({
+      description: 'The average buy price of the asset.',
+      example: 30000,
+    }),
+  ),
+  currentPrice: Schema.Number.pipe(
+    Schema.annotations({
+      description: 'The current price of the asset.',
+      example: 35000,
+    }),
+  ),
+  totalValue: Schema.Number.pipe(
+    Schema.annotations({
+      description: 'The total value of the asset at current price.',
+      example: 52500,
+    }),
+  ),
+  totalInvested: Schema.Number.pipe(
+    Schema.annotations({
+      description: 'The total amount invested in the asset.',
+      example: 45000,
+    }),
+  ),
+  gainLoss: Schema.Number.pipe(
+    Schema.annotations({
+      description:
+        'The gain or loss from the investment in the asset, calculated as totalValue - totalInvested.',
+      example: 7500,
+    }),
+  ),
+  gainLossPercent: Schema.Number.pipe(
+    Schema.annotations({
+      description:
+        'The percentage gain or loss from the investment in the asset, calculated as (gainLoss / totalInvested) * 100.',
+      example: 16.67,
+    }),
+  ),
+})
+
+export type Asset = typeof Asset.Type
+
+export const Summary = Schema.Struct({
+  totals: Schema.Struct({
+    invested: Schema.Number.pipe(
+      Schema.annotations({
+        description: 'Total amount invested across all assets.',
+        example: 45000,
+      }),
+    ),
+    currentValue: Schema.Number.pipe(
+      Schema.annotations({
+        description: 'Total current value of all assets.',
+        example: 52500,
+      }),
+    ),
+    gainLoss: Schema.Number.pipe(
+      Schema.annotations({
+        description: 'Total gain or loss across all assets.',
+        example: 7500,
+      }),
+    ),
+    gainLossPercent: Schema.Number.pipe(
+      Schema.annotations({
+        description: 'Total percentage gain or loss across all assets.',
+        example: 16.67,
+      }),
+    ),
+  }),
+  assets: Schema.Array(Asset).pipe(
+    Schema.annotations({
+      description:
+        'Array of asset summaries, each containing detailed information about an asset.',
+    }),
+  ),
+}).pipe(
+  Schema.annotations({
+    description:
+      'Summary of the portfolio, including total investments and individual asset summaries.',
+  }),
+)
