@@ -15,7 +15,7 @@ export const formatNumber = (value: number): string => {
  */
 export const formatSignedNumber = (value: number): string => {
   const formattedValue = formatNumber(Math.abs(value))
-  return value >= 0 ? `+ ${formattedValue}` : `- ${formattedValue}`
+  return value >= 0 ? `+${formattedValue}` : `-${formattedValue}`
 }
 
 /**
@@ -27,8 +27,8 @@ export const formatSignedCurrencyWithColor = (
 ): { color: Color; value: string } => {
   const formattedValue = formatNumber(Math.abs(value))
   const color = value >= 0 ? Color.Green : Color.Red
-  const sign = value >= 0 ? '+ ' : '- '
-  return { color, value: `${sign}${currencySymbol}${formattedValue}` }
+  const sign = value >= 0 ? '+' : '-'
+  return { color, value: `${currencySymbol} ${sign}${formattedValue}` }
 }
 
 /**
@@ -39,7 +39,7 @@ export const formatSignedNumberWithColor = (
 ): { color: Color; value: string } => {
   const formattedValue = formatNumber(Math.abs(value))
   const color = value >= 0 ? Color.Green : Color.Red
-  const sign = value >= 0 ? '+ ' : '- '
+  const sign = value >= 0 ? '+' : '-'
   return { color, value: `${sign}${formattedValue}` }
 }
 
