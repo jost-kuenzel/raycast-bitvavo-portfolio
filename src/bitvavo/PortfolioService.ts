@@ -34,27 +34,35 @@ export class PortfolioService extends Effect.Service<PortfolioService>()(
           const market = `${symbol}-EUR`
           const currentBalance = parseFloat(balance.available)
 
-          // Filter trades for this asset and determine the market
-          const assetTrades = yield* bitvavo.getTrades(`${symbol}-EUR`)
+          // Determine trades
+          const trades = yield* pipe(
+            bitvavo.getTrades(market),
+            Effect.andThen(Array.filter(trade => trade.side === 'buy')),
+          )
 
           // Calculate total purchased
-          const totalPurchased = Array.reduce(assetTrades, 0, (acc, trade) =>
-            plus(acc, trade.side === 'buy' ? parseFloat(trade.amount) : 0),
+          const totalPurchased = Array.reduce(trades, 0, (acc, trade) =>
+            plus(acc, parseFloat(trade.amount)),
           )
 
           // Calculate total invested
-          const totalInvested = Array.reduce(assetTrades, 0, (acc, trade) =>
-            plus(
-              acc,
-              trade.side === 'buy'
-                ? times(parseFloat(trade.amount), parseFloat(trade.price))
-                : 0,
-            ),
+          const totalInvested = Array.reduce(trades, 0, (acc, trade) =>
+            plus(acc, times(parseFloat(trade.amount), parseFloat(trade.price))),
           )
 
-          // Calculate average buy price
-          const averageBuyPrice =
-            totalPurchased > 0 ? divide(totalInvested, totalPurchased) : 0
+          // Calculate the weigthed average buy price.
+          const averageBuyPrice = pipe(
+            trades,
+            Array.reduce(0, (acc, trade) =>
+              plus(
+                acc,
+                divide(
+                  times(parseFloat(trade.amount), parseFloat(trade.price)),
+                  totalPurchased,
+                ),
+              ),
+            ),
+          )
 
           // Get current price
           const ticker = yield* bitvavo.getTicker(market)
@@ -69,7 +77,7 @@ export class PortfolioService extends Effect.Service<PortfolioService>()(
           return {
             symbol,
             market,
-            balance: currentBalance,
+            currentBalance,
             averageBuyPrice,
             currentPrice,
             totalValue,

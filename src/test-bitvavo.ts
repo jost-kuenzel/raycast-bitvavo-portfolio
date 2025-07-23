@@ -8,7 +8,8 @@ const bitvavo = require('bitvavo')().options({
 })
 
 try {
-  let response = await bitvavo.trades('BTC-EUR', {})
+  //let response = await bitvavo.balance({})
+  let response = await bitvavo.trades('ETH-EUR', {})
   for (let entry of response) {
     console.log(entry)
   }

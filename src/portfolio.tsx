@@ -122,7 +122,7 @@ export default function Portfolio() {
             icon={iconPath}
             accessories={[
               {
-                text: `${currencySymbol}${formatNumber(asset.currentPrice)}`,
+                text: `${currencySymbol} ${formatNumber(asset.currentPrice)}`,
               },
             ]}
             detail={
@@ -131,31 +131,31 @@ export default function Portfolio() {
                   <List.Item.Detail.Metadata>
                     <List.Item.Detail.Metadata.Label
                       title="Current Price"
-                      text={`${currencySymbol}${formatNumber(
+                      text={`${currencySymbol} ${formatNumber(
                         asset.currentPrice,
                       )}`}
                     />
                     <List.Item.Detail.Metadata.Separator />
                     <List.Item.Detail.Metadata.Label
                       title="Average Buy Price"
-                      text={`${currencySymbol}${formatNumber(
+                      text={`${currencySymbol} ${formatNumber(
                         asset.averageBuyPrice,
                       )}`}
                     />
                     <List.Item.Detail.Metadata.Label
                       title="Balance"
-                      text={asset.balance.toString()}
+                      text={asset.currentBalance.toString()}
                     />
                     <List.Item.Detail.Metadata.Separator />
                     <List.Item.Detail.Metadata.Label
                       title="Invested"
-                      text={`${currencySymbol}${formatNumber(
+                      text={`${currencySymbol} ${formatNumber(
                         asset.totalInvested,
                       )}`}
                     />
                     <List.Item.Detail.Metadata.Label
                       title="Current Value"
-                      text={`${currencySymbol}${formatNumber(
+                      text={`${currencySymbol} ${formatNumber(
                         asset.totalValue,
                       )}`}
                     />
@@ -187,55 +187,30 @@ export default function Portfolio() {
               metadata={
                 <List.Item.Detail.Metadata>
                   <List.Item.Detail.Metadata.Label
-                    title="Total Value (EUR)"
+                    title="Total Value"
                     text={`€${formatNumber(
                       assets
                         .filter(asset => asset.market.endsWith('-EUR'))
                         .reduce((sum, asset) => sum + asset.totalValue, 0),
                     )}`}
                   />
-                  <List.Item.Detail.Metadata.Label
-                    title="Total Value (USDC)"
-                    text={`$${formatNumber(
-                      assets
-                        .filter(asset => asset.market.endsWith('-USDC'))
-                        .reduce((sum, asset) => sum + asset.totalValue, 0),
-                    )}`}
-                  />
                   <List.Item.Detail.Metadata.Separator />
                   <List.Item.Detail.Metadata.Label
-                    title="Invested (EUR)"
+                    title="Invested"
                     text={`€${formatNumber(
                       assets
                         .filter(asset => asset.market.endsWith('-EUR'))
                         .reduce((sum, asset) => sum + asset.totalInvested, 0),
                     )}`}
                   />
-                  <List.Item.Detail.Metadata.Label
-                    title="Invested (USDC)"
-                    text={`$${formatNumber(
-                      assets
-                        .filter(asset => asset.market.endsWith('-USDC'))
-                        .reduce((sum, asset) => sum + asset.totalInvested, 0),
-                    )}`}
-                  />
                   <List.Item.Detail.Metadata.Separator />
                   <List.Item.Detail.Metadata.Label
-                    title="Gain/Loss (EUR)"
+                    title="Gain/Loss"
                     text={formatSignedCurrencyWithColor(
                       assets
                         .filter(asset => asset.market.endsWith('-EUR'))
                         .reduce((sum, asset) => sum + asset.gainLoss, 0),
                       '€',
-                    )}
-                  />
-                  <List.Item.Detail.Metadata.Label
-                    title="Gain/Loss (USDC)"
-                    text={formatSignedCurrencyWithColor(
-                      assets
-                        .filter(asset => asset.market.endsWith('-USDC'))
-                        .reduce((sum, asset) => sum + asset.gainLoss, 0),
-                      '$',
                     )}
                   />
                   <List.Item.Detail.Metadata.Label

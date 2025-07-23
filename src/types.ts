@@ -26,7 +26,7 @@ export interface BitvavoTicker {
 export interface AssetSummary {
   symbol: string
   market: string
-  balance: number
+  currentBalance: number
   averageBuyPrice: number
   currentPrice: number
   totalValue: number
