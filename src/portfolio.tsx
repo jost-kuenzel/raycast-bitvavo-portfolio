@@ -1,4 +1,3 @@
-import { FetchHttpClient } from '@effect/platform'
 import {
   Action,
   ActionPanel,
@@ -9,13 +8,10 @@ import {
   showToast,
   Toast,
 } from '@raycast/api'
-import { ConfigProvider, Effect, Layer } from 'effect'
+import { Effect } from 'effect'
 import { useEffect, useState } from 'react'
-import { BitvavoService } from './bitvavo/BitvavoService.js'
 import { PortfolioService } from './bitvavo/PortfolioService.js'
 import type { Summary } from './bitvavo/schema.js'
-
-type SummaryType = typeof Summary.Type
 import {
   formatMarketDisplay,
   formatNumber,
@@ -24,6 +20,9 @@ import {
   getCryptocurrencyIcon,
   getCurrencySymbolFromMarket,
 } from './utils.js'
+import { runPromise } from './bitvavo/Runtime.js'
+
+type SummaryType = typeof Summary.Type
 
 interface Preferences {
   bitvavoApiKey: string
@@ -38,17 +37,20 @@ export default function Portfolio() {
   const preferences = getPreferenceValues<Preferences>()
 
   const loadPortfolio = async () =>
-    Effect.gen(function* () {
-      setIsLoading(true)
-      setError(null)
-
-      const fetchedSummary = yield* PortfolioService.getAssetSummary()
-
-      setSummary(fetchedSummary)
-      setIsLoading(false)
-    })
-      .pipe(
-        // error handling
+    runPromise(
+      new Map([
+        ['BITVAVO_API_BASE', 'https://api.bitvavo.com/v2'],
+        ['BITVAVO_API_KEY', preferences.bitvavoApiKey],
+        ['BITVAVO_API_SECRET', preferences.bitvavoApiSecret],
+      ]),
+    )(
+      Effect.gen(function* () {
+        setIsLoading(true)
+        setError(null)
+        const fetchedSummary = yield* PortfolioService.getAssetSummary()
+        setSummary(fetchedSummary)
+        setIsLoading(false)
+      }).pipe(
         Effect.catchAll(error => {
           setIsLoading(false)
           setError(error.message)
@@ -61,27 +63,8 @@ export default function Portfolio() {
             }),
           )
         }),
-      )
-      .pipe(
-        // running
-        Effect.provide(
-          Layer.mergeAll(
-            FetchHttpClient.layer,
-            BitvavoService.Default,
-            PortfolioService.Default,
-          ),
-        ),
-        Effect.withConfigProvider(
-          ConfigProvider.fromMap(
-            new Map<string, string>([
-              ['BITVAVO_API_BASE', 'https://api.bitvavo.com/v2'],
-              ['BITVAVO_API_KEY', preferences.bitvavoApiKey],
-              ['BITVAVO_API_SECRET', preferences.bitvavoApiSecret],
-            ]),
-          ),
-        ),
-        Effect.runPromise,
-      )
+      ),
+    )
 
   useEffect(() => {
     loadPortfolio()
@@ -104,17 +87,13 @@ export default function Portfolio() {
     )
   }
 
-  const sortedAssets = summary
-    ? [...summary.assets].sort((a, b) => a.symbol.localeCompare(b.symbol))
-    : []
-
   return (
     <List
       isShowingDetail
       isLoading={isLoading}
       searchBarPlaceholder="Search assets..."
     >
-      {sortedAssets.map(asset => {
+      {summary?.assets.map(asset => {
         const currencySymbol = getCurrencySymbolFromMarket(asset.market)
         const iconPath = getCryptocurrencyIcon(asset.symbol)
         return (

@@ -1,4 +1,4 @@
-import { Array, Effect, pipe } from 'effect'
+import { Array, Effect, Order, pipe } from 'effect'
 import { BitvavoService } from './BitvavoService.js'
 import { plus, times, divide, enableBoundaryChecking } from 'number-precision'
 import { Asset, Summary, Balance } from './schema.js'
@@ -18,6 +18,7 @@ export class PortfolioService extends Effect.Service<PortfolioService>()(
           const balances = yield* pipe(
             bitvavo.getBalances(),
             Effect.andThen(Array.filter(_ => _.symbol != 'EUR')),
+            Effect.andThen(Array.sortWith(b => b.symbol, Order.string)),
           )
 
           const assets = yield* Effect.forEach(balances, buildAsset, {
