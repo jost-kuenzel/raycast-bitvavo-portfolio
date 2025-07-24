@@ -128,6 +128,38 @@ export const TickerPrice = Schema.Struct({
   ),
 })
 
+export const Ticker24h = Schema.Struct({
+  timestamp: Schema.Number.pipe(
+    Schema.annotations({
+      description: 'The Unix timestamp when the ticker was last updated.',
+      example: 1542967486256,
+    }),
+  ),
+  market: Schema.String.pipe(
+    Schema.annotations({
+      description: 'The market for which the ticker is provided.',
+      example: 'BTC-EUR',
+    }),
+  ),
+  bid: Schema.String.pipe(
+    Schema.annotations({
+      description: 'The highest bid price at the moment.',
+      example: '100550',
+    }),
+  ),
+  ask: Schema.String.pipe(
+    Schema.annotations({
+      description: 'The lowest ask price at the moment.',
+      example: '100560',
+    }),
+  ),
+}).pipe(
+  Schema.annotations({
+    description:
+      'Ticker information for a market, including prices and volumes over the last 24 hours.',
+  }),
+)
+
 export const Asset = Schema.Struct({
   symbol: Schema.String.pipe(
     Schema.annotations({

@@ -5,12 +5,11 @@ import {
   getPreferenceValues,
   List,
   openExtensionPreferences,
-  showToast,
-  Toast,
 } from '@raycast/api'
-import { Effect } from 'effect'
+import { Effect, pipe, Stream } from 'effect'
 import { useEffect, useState } from 'react'
-import { PortfolioService } from './bitvavo/PortfolioService.js'
+import { PortfolioStreamService } from './bitvavo/PortfolioStreamService.js'
+import { runPromise } from './bitvavo/Runtime.js'
 import type { Summary } from './bitvavo/schema.js'
 import {
   formatMarketDisplay,
@@ -20,7 +19,6 @@ import {
   getCryptocurrencyIcon,
   getCurrencySymbolFromMarket,
 } from './utils.js'
-import { runPromise } from './bitvavo/Runtime.js'
 
 type SummaryType = typeof Summary.Type
 
@@ -33,13 +31,13 @@ export default function Portfolio() {
   const [summary, setSummary] = useState<SummaryType | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
-
   const preferences = getPreferenceValues<Preferences>()
 
   const loadPortfolio = async () =>
     runPromise(
       new Map([
-        ['BITVAVO_API_BASE', 'https://api.bitvavo.com/v2'],
+        ['BITVAVO_API_REST_URL', 'https://api.bitvavo.com/v2'],
+        ['BITVAVO_API_WS_URL', 'wss://ws.bitvavo.com/v2/'],
         ['BITVAVO_API_KEY', preferences.bitvavoApiKey],
         ['BITVAVO_API_SECRET', preferences.bitvavoApiSecret],
       ]),
@@ -47,23 +45,26 @@ export default function Portfolio() {
       Effect.gen(function* () {
         setIsLoading(true)
         setError(null)
-        const fetchedSummary = yield* PortfolioService.getAssetSummary()
-        setSummary(fetchedSummary)
-        setIsLoading(false)
-      }).pipe(
-        Effect.catchAll(error => {
-          setIsLoading(false)
-          setError(error.message)
-          console.error(error)
-          return Effect.promise(() =>
-            showToast({
-              style: Toast.Style.Failure,
-              title: 'Error loading portfolio',
-              message: error instanceof Error ? error.message : 'Unknown error',
-            }),
-          )
-        }),
-      ),
+        const stream = yield* PortfolioStreamService.setup()
+
+        yield* pipe(
+          stream,
+          Stream.onStart(
+            pipe(
+              Effect.void,
+              Effect.tap(() => {
+                console.log('Starting portfolio stream...')
+              }),
+            ),
+          ),
+          Stream.tap(_ => {
+            setSummary(_)
+            setIsLoading(false)
+            return Effect.void
+          }),
+          Stream.runDrain,
+        )
+      }),
     )
 
   useEffect(() => {

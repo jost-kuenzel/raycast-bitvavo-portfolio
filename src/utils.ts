@@ -48,13 +48,12 @@ export const formatSignedNumberWithColor = (
  */
 export const getCryptocurrencyIcon = (symbol: string): Image => {
   const baseUrl =
-    'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/svg/color'
-  const iconUrl = `${baseUrl}/${symbol.toLowerCase()}.svg`
+    'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/refs/heads/master/32/color'
+  const iconUrl = `${baseUrl}/${symbol.toLowerCase()}.png`
 
   return {
     source: iconUrl,
-    fallback: `${baseUrl}/generic.svg`,
-    mask: Image.Mask.Circle,
+    fallback: `${baseUrl}/generic.png`,
   }
 }
 

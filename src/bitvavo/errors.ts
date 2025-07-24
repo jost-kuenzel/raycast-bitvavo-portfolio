@@ -23,3 +23,21 @@ export class BitvavoApiError extends Schema.TaggedError<BitvavoApiError>()(
     ),
   },
 ) {}
+
+export class BitvavoSdkError extends Schema.TaggedError<BitvavoSdkError>()(
+  'BitvavoSdkError',
+  {
+    method: Schema.String.pipe(
+      Schema.annotations({
+        description: 'The function called on the SDK',
+        example: 'balance',
+      }),
+    ),
+    message: Schema.String.pipe(
+      Schema.annotations({
+        description: 'Error message for get balance operation',
+        example: 'Failed to fetch balances from Bitvavo',
+      }),
+    ),
+  },
+) {}

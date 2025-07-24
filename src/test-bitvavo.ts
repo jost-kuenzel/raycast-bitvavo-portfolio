@@ -7,12 +7,19 @@ const bitvavo = require('bitvavo')().options({
   DEBUGGING: false,
 })
 
-try {
-  //let response = await bitvavo.balance({})
-  let response = await bitvavo.trades('ETH-EUR', {})
-  for (let entry of response) {
-    console.log(entry)
-  }
-} catch (error) {
-  console.log(error)
-}
+//try {
+//  //let response = await bitvavo.balance({})
+//  let response = await bitvavo.trades('ETH-EUR', {})
+//  for (let entry of response) {
+//    console.log(entry)
+//  }
+//} catch (error) {
+//  console.log(error)
+//}
+//
+
+//let emitter = bitvavo.getEmitter()
+
+bitvavo.websocket.subscriptionTicker24h('XRP-EUR', (response: any) => {
+  console.log(response)
+})
