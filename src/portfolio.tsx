@@ -170,12 +170,12 @@ export default function Portfolio() {
                 <List.Item.Detail.Metadata>
                   <List.Item.Detail.Metadata.Label
                     title="Total Value"
-                    text={`€${formatNumber(summary.totals.currentValue)}`}
+                    text={`€ ${formatNumber(summary.totals.currentValue)}`}
                   />
                   <List.Item.Detail.Metadata.Separator />
                   <List.Item.Detail.Metadata.Label
                     title="Invested"
-                    text={`€${formatNumber(summary.totals.invested)}`}
+                    text={`€ ${formatNumber(summary.totals.invested)}`}
                   />
                   <List.Item.Detail.Metadata.Separator />
                   <List.Item.Detail.Metadata.Label

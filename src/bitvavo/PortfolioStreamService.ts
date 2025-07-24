@@ -85,7 +85,7 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
           yield* Effect.promise(() => bitvavo.websocket.checkSocket())
 
           // log WebSocket errors
-          const wsErrorLogFiber = yield* pipe(
+          yield* pipe(
             Stream.async(emit => {
               bitvavo.getEmitter().on('error', (error: any) => {
                 emit(Effect.succeed(Chunk.of(error)))
@@ -100,7 +100,7 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
           )
 
           // use the ticker stream to update the current prices ref
-          const tickerFiber = yield* pipe(
+          yield* pipe(
             Array.map(markets, market =>
               pipe(
                 Stream.async(emit => {
@@ -110,6 +110,11 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
                       emit(Effect.succeed(Chunk.of(response)))
                     },
                   )
+                }),
+                Stream.throttle({
+                  cost: () => 1,
+                  duration: '2 seconds',
+                  units: 1,
                 }),
                 Stream.filter(Schema.is(Ticker24h)),
                 Stream.map(Schema.decodeUnknownSync(Ticker24h)),
@@ -121,24 +126,13 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
               return PubSub.publish(pubsub, _.timestamp)
             }),
             Stream.runDrain,
-            Effect.forkDaemon,
             Effect.onInterrupt(() => Console.log('Ticker stream interrupted')),
+            Effect.forkDaemon,
           )
-
-          //yield* Effect.addFinalizer(exit =>
-          //  Effect.gen(function* () {
-          //    console.log('finalizing..', exit)
-          //    yield* Fiber.interrupt(tickerFiber)
-          //    yield* Fiber.interrupt(wsErrorLogFiber)
-          //    console.log('..finalized')
-          //  }),
-          //)
 
           // consume the pubsub stream to update the summary
           return Stream.fromPubSub(pubsub).pipe(
-            Stream.map(_ => {
-              return getSummary(balance, allTrades)(currentPricesMap)
-            }),
+            Stream.map(() => getSummary(balance, allTrades)(currentPricesMap)),
           )
         }).pipe(Effect.scoped)
 
