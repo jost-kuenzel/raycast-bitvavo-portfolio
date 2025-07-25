@@ -1,7 +1,6 @@
 {
   "name": "raycast-bitvavo-portfolio",
   "title": "Bitvavo Portfolio Tracker",
-  "version": "1.0.0",
   "description": "View your Bitvavo cryptocurrency portfolio overview with gains/losses",
   "icon": "icon.png",
   "author": "jost_kunzel",
@@ -9,9 +8,6 @@
     "Finance"
   ],
   "license": "MIT",
-  "main": "dist/portfolio.js",
-  "module": "src/portfolio.tsx",
-  "type": "module",
   "private": true,
   "scripts": {
     "dev": "npx ray develop",
@@ -46,19 +42,19 @@
   ],
   "devDependencies": {
     "@types/node": "^24.0.14",
-    "@types/react": "^19.1.8",
-    "react-devtools": "^6.1.1",
-    "vitest": "^2.1.8"
+    "@types/react": "^18.3.23",
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
     "@effect/platform": "^0.88.2",
-    "@raycast/api": "^1.101.0",
+    "@raycast/api": "^1.100.3",
+    "@raycast/utils": "^1.17.0",
     "bitvavo": "^1.5.0",
     "effect": "^3.16.16",
     "number-precision": "^1.6.0",
-    "react": "^19.1.0"
+    "react": "^18.3.1"
   }
 }
