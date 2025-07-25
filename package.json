@@ -1,12 +1,12 @@
 {
-  "name": "coiny",
-  "title": "Bitvavo Portfolio Viewer",
+  "name": "raycast-bitvavo-portfolio",
+  "title": "Bitvavo Portfolio Tracker",
   "version": "1.0.0",
   "description": "View your Bitvavo cryptocurrency portfolio overview with gains/losses",
   "icon": "icon.png",
-  "author": "Jost Künzel",
+  "author": "jost_kunzel",
   "categories": [
-    "Other"
+    "Finance"
   ],
   "license": "MIT",
   "main": "dist/portfolio.js",
