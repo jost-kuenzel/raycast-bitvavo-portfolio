@@ -5,6 +5,7 @@ import {
   minus,
   plus,
   times,
+  round,
 } from 'number-precision'
 import { Asset, Balance, Summary, Trades } from './schema'
 
@@ -25,6 +26,7 @@ export const getSummary =
         const trades = pipe(
           allTrades,
           Array.filter(trade => trade.market === market),
+          Array.filter(trade => trade.side === 'buy'),
         )
 
         // Calculate total purchased
@@ -55,7 +57,9 @@ export const getSummary =
         const totalValue = times(currentBalance, currentPrice)
         const gainLoss = minus(totalValue, totalInvested)
         const gainLossPercent =
-          totalInvested > 0 ? times(divide(gainLoss, totalInvested), 100) : 0
+          totalInvested > 0
+            ? round(times(divide(gainLoss, totalInvested), 100), 2)
+            : 0
 
         return Asset.make({
           symbol,
@@ -77,8 +81,9 @@ export const getSummary =
           plus(acc, asset.totalValue),
         )
         const gainLoss = minus(currentValue, invested)
-        const gainLossPercent =
+        const rawGainLossPercent =
           invested > 0 ? times(divide(gainLoss, invested), 100) : 0
+        const gainLossPercent = round(rawGainLossPercent, 2)
 
         return Summary.make({
           totals: {

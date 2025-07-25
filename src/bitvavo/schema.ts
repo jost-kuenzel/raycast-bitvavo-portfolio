@@ -112,22 +112,6 @@ export const Trades = Schema.Array(
   }),
 )
 
-export const TickerPrice = Schema.Struct({
-  market: Schema.String.pipe(
-    Schema.annotations({
-      description: 'The market for which you requested the latest trade price.',
-      example: 'BTC-EUR',
-    }),
-  ),
-  price: Schema.String.pipe(
-    Schema.annotations({
-      description:
-        'The latest trade price for 1 unit of base currency in the amount of quote currency for the specified market. For example, 34243 Euro.',
-      example: '34,243',
-    }),
-  ),
-})
-
 export const Ticker24h = Schema.Struct({
   timestamp: Schema.Number.pipe(
     Schema.annotations({

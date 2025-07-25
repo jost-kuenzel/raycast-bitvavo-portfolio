@@ -7,10 +7,10 @@ import {
   List,
   openExtensionPreferences,
 } from '@raycast/api'
-import { Effect, pipe, Stream } from 'effect'
+import { Effect, Fiber, pipe, Stream } from 'effect'
 import { useEffect, useState } from 'react'
 import { PortfolioStreamService } from './bitvavo/PortfolioStreamService.js'
-import { runPromise } from './bitvavo/Runtime.js'
+import { run } from './bitvavo/Runtime.js'
 import type { Summary } from './bitvavo/schema.js'
 import {
   formatMarketDisplay,
@@ -20,6 +20,7 @@ import {
   getCryptocurrencyIcon,
   getCurrencySymbolFromMarket,
 } from './utils.js'
+import { set } from 'effect/HashMap'
 
 type SummaryType = typeof Summary.Type
 
@@ -34,8 +35,8 @@ export default function Portfolio() {
   const [error, setError] = useState<string | null>(null)
   const preferences = getPreferenceValues<Preferences>()
 
-  const loadPortfolio = async () =>
-    runPromise(
+  const loadPortfolio = () =>
+    run(
       new Map([
         ['BITVAVO_API_REST_URL', 'https://api.bitvavo.com/v2'],
         ['BITVAVO_API_WS_URL', 'wss://ws.bitvavo.com/v2/'],
@@ -44,33 +45,22 @@ export default function Portfolio() {
       ]),
     )(
       Effect.gen(function* () {
-        setIsLoading(true)
-        setError(null)
         const stream = yield* PortfolioStreamService.setup()
-
         yield* pipe(
           stream,
-          Stream.onStart(
-            pipe(
-              Effect.void,
-              Effect.tap(() => {
-                console.log('Starting portfolio stream...')
-              }),
-            ),
-          ),
-          Stream.tap(_ => {
-            setSummary(_)
-            setIsLoading(false)
-            return Effect.void
-          }),
+          Stream.tap(summary => Effect.sync(() => setSummary(summary))),
           Stream.runDrain,
         )
-      }),
+      }).pipe(Effect.catchAll(err => Effect.sync(() => setError(err.message)))),
     )
 
   useEffect(() => {
     loadPortfolio()
-  }, [])
+  }, [true])
+
+  useEffect(() => {
+    setIsLoading(!summary)
+  }, [summary])
 
   if (error) {
     return (
@@ -82,7 +72,6 @@ export default function Portfolio() {
               title="Open Extension Preferences"
               onAction={openExtensionPreferences}
             />
-            <Action title="Retry" onAction={loadPortfolio} />
           </ActionPanel>
         }
       />

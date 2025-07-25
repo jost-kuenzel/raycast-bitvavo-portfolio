@@ -26,7 +26,6 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
       const apiSecret = yield* Config.string('BITVAVO_API_SECRET')
       const apiRestUrl = yield* Config.string('BITVAVO_API_REST_URL')
       const apiWsUrl = yield* Config.string('BITVAVO_API_WS_URL')
-
       const bitvavo = require('bitvavo')().options({
         APIKEY: apiKey,
         APISECRET: apiSecret,
@@ -35,52 +34,59 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
         WSURL: apiWsUrl,
         DEBUGGING: false,
       })
-
       const retrySchedule = Schedule.intersect(
         Schedule.exponential('100 millis'),
         Schedule.recurs(3),
       )
 
-      const balance = yield* pipe(
-        Effect.tryPromise({
-          try: () => bitvavo.balance(),
-          catch: err =>
-            Effect.fail(
-              new BitvavoSdkError({
-                method: 'balance',
-                message: 'unknown',
-              }),
-            ),
-        }),
-        Effect.retry(retrySchedule),
-        Effect.andThen(Schema.decodeUnknown(Balance)),
-        Effect.andThen(Array.sortWith(b => b.symbol, Order.string)),
-        Effect.andThen(Array.filter(_ => _.symbol !== 'EUR')),
-      )
-
-      // derive markets from balances
-      const markets = Array.map(balance, _ => `${_.symbol}-EUR`)
-
-      // Determine trades
-      const allTrades = yield* pipe(
-        Effect.forEach(markets, market =>
-          pipe(
-            Effect.promise(() => bitvavo.trades(market)),
-            Effect.andThen(Schema.decodeUnknownSync(Trades)),
-            Effect.andThen(Array.filter(trade => trade.side === 'buy')),
-          ),
-        ),
-        Effect.andThen(Array.flatten),
-      )
-
-      // create a Ref of a Map of market to current price
-      const currentPricesMap = new Map<string, number>()
-
-      // use a pubsub to notify on price updates
-      const pubsub = yield* PubSub.unbounded<number>()
-
       const setup = () =>
         Effect.gen(function* () {
+          const pubsub = yield* PubSub.unbounded<number>()
+          const myProcId = Math.random().toString(36).substring(2, 15)
+          const currentPricesMap = new Map<string, number>()
+
+          // get balances
+          const balance = yield* pipe(
+            Effect.tryPromise({
+              try: () => bitvavo.balance(),
+              catch: (err: any) =>
+                new BitvavoSdkError({
+                  method: 'balance',
+                  message: `${err}`,
+                }),
+            }),
+            Effect.retry(retrySchedule),
+            Effect.andThen(Schema.decodeUnknown(Balance)),
+            Effect.andThen(Array.sortWith(b => b.symbol, Order.string)),
+            Effect.andThen(Array.filter(_ => _.symbol !== 'EUR')),
+          )
+
+          // derive markets from balances
+          const markets = Array.map(balance, _ => `${_.symbol}-EUR`)
+
+          // get trades
+          const allTrades = yield* pipe(
+            Effect.forEach(
+              markets,
+              market =>
+                pipe(
+                  Effect.tryPromise({
+                    try: () => bitvavo.trades(market),
+                    catch: (err: any) =>
+                      new BitvavoSdkError({
+                        method: 'trades',
+                        message: `${err}`,
+                      }),
+                  }),
+                  Effect.retry(retrySchedule),
+                  Effect.andThen(Schema.decodeUnknownSync(Trades)),
+                  Effect.andThen(Array.filter(trade => trade.side === 'buy')),
+                ),
+              { concurrency: 'unbounded' },
+            ),
+            Effect.andThen(Array.flatten),
+          )
+
           // Initialize WebSocket connection
           yield* Effect.promise(() => bitvavo.websocket.checkSocket())
 
@@ -91,15 +97,12 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
                 emit(Effect.succeed(Chunk.of(error)))
               })
             }),
-            Stream.tap(error => {
-              console.error('WebSocket error:', error)
-              return Effect.void
-            }),
+            Stream.tap(err => Console.error('WebSocket error:', err)),
             Stream.runDrain,
             Effect.forkDaemon,
           )
 
-          // use the ticker stream to update the current prices ref
+          // use the ticker stream to update the current prices
           yield* pipe(
             Array.map(markets, market =>
               pipe(
@@ -111,6 +114,7 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
                     },
                   )
                 }),
+                Stream.tap(() => Console.debug(myProcId, 'tick')),
                 Stream.throttle({
                   cost: () => 1,
                   duration: '2 seconds',
@@ -126,7 +130,6 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
               return PubSub.publish(pubsub, _.timestamp)
             }),
             Stream.runDrain,
-            Effect.onInterrupt(() => Console.log('Ticker stream interrupted')),
             Effect.forkDaemon,
           )
 
@@ -134,7 +137,10 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
           return Stream.fromPubSub(pubsub).pipe(
             Stream.map(() => getSummary(balance, allTrades)(currentPricesMap)),
           )
-        }).pipe(Effect.scoped)
+        }).pipe(
+          Effect.scoped,
+          Effect.tapError(err => Console.error(err)),
+        )
 
       return { setup }
     }),
