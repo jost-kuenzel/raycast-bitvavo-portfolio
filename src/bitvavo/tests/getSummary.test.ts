@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { getSummary } from '../getSummary'
+import type { Trades } from '../schema'
 
 describe('getSummary', () => {
   // Mock data for testing - using plain objects that match the schema types
@@ -213,7 +214,7 @@ describe('getSummary', () => {
         },
       ]
 
-      const emptyTrades: any[] = []
+      const emptyTrades: typeof Trades.Type = []
       const currentPrices = new Map([['ADA-EUR', 0.5]])
 
       const summary = getSummary(

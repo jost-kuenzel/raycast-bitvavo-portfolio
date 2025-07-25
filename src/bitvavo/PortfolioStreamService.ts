@@ -48,7 +48,7 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
           const balance = yield* pipe(
             Effect.tryPromise({
               try: () => bitvavo.balance(),
-              catch: (err: any) =>
+              catch: (err: unknown) =>
                 new BitvavoSdkError({
                   method: 'balance',
                   message: `${err}`,
@@ -71,7 +71,7 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
                 pipe(
                   Effect.tryPromise({
                     try: () => bitvavo.trades(market),
-                    catch: (err: any) =>
+                    catch: (err: unknown) =>
                       new BitvavoSdkError({
                         method: 'trades',
                         message: `${err}`,
@@ -92,7 +92,7 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
           // log WebSocket errors
           yield* pipe(
             Stream.async(emit => {
-              bitvavo.getEmitter().on('error', (error: any) => {
+              bitvavo.getEmitter().on('error', (error: unknown) => {
                 emit(Effect.succeed(Chunk.of(error)))
               })
             }),
@@ -108,7 +108,7 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
                 Stream.async(emit => {
                   bitvavo.websocket.subscriptionTicker24h(
                     market,
-                    (response: any) => {
+                    (response: unknown) => {
                       emit(Effect.succeed(Chunk.of(response)))
                     },
                   )
