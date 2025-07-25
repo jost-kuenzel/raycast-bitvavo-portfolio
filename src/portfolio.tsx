@@ -1,6 +1,7 @@
 import {
   Action,
   ActionPanel,
+  Color,
   Detail,
   getPreferenceValues,
   List,
@@ -104,7 +105,12 @@ export default function Portfolio() {
             icon={iconPath}
             accessories={[
               {
-                text: `${currencySymbol} ${formatNumber(asset.currentPrice)}`,
+                text: {
+                  value: `${currencySymbol} ${formatNumber(
+                    asset.currentPrice,
+                  )}`,
+                  color: Color.SecondaryText,
+                },
               },
             ]}
             detail={

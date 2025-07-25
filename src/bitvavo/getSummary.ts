@@ -1,7 +1,12 @@
 import { Array, pipe } from 'effect'
-import { divide, plus, times } from 'number-precision'
+import {
+  divide,
+  enableBoundaryChecking,
+  minus,
+  plus,
+  times,
+} from 'number-precision'
 import { Asset, Balance, Summary, Trades } from './schema'
-import { enableBoundaryChecking } from 'number-precision'
 
 enableBoundaryChecking(false)
 
@@ -47,8 +52,8 @@ export const getSummary =
         )
 
         // Calculate current value and gains/losses
-        const totalValue = currentBalance * currentPrice
-        const gainLoss = totalValue - totalInvested
+        const totalValue = times(currentBalance, currentPrice)
+        const gainLoss = minus(totalValue, totalInvested)
         const gainLossPercent =
           totalInvested > 0 ? times(divide(gainLoss, totalInvested), 100) : 0
 
@@ -71,12 +76,9 @@ export const getSummary =
         const currentValue = Array.reduce(assets, 0, (acc, asset) =>
           plus(acc, asset.totalValue),
         )
-        const gainLoss = Array.reduce(assets, 0, (acc, asset) =>
-          plus(acc, asset.gainLoss),
-        )
-        const gainLossPercent = Array.reduce(assets, 0, (acc, asset) =>
-          plus(acc, asset.gainLossPercent),
-        )
+        const gainLoss = minus(currentValue, invested)
+        const gainLossPercent =
+          invested > 0 ? times(divide(gainLoss, invested), 100) : 0
 
         return Summary.make({
           totals: {
