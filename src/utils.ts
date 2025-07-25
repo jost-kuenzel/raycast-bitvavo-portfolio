@@ -1,50 +1,69 @@
 import { Color, Image } from '@raycast/api'
 
 /**
- * Formats a number with proper locale formatting
+ * Formats a currency amount with English conventions
+ * Euro symbol before the number, no space, minus before symbol for negatives
+ * Examples: €1,234.56, -€1,234.56
  */
-export const formatNumber = (value: number): string => {
-  return new Intl.NumberFormat('en-US', {
+export const formatCurrency = (
+  value: number,
+  currencySymbol: string = '€',
+): string => {
+  const absValue = Math.abs(value)
+  const formattedValue = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value)
+  }).format(absValue)
+
+  return `${currencySymbol}${formattedValue}`
 }
 
 /**
- * Formats a signed number with + or - prefix
- */
-export const formatSignedNumber = (value: number): string => {
-  const formattedValue = formatNumber(Math.abs(value))
-  return value >= 0 ? `+${formattedValue}` : `-${formattedValue}`
-}
-
-/**
- * Formats a signed currency value with color coding and currency symbol
+ * Formats a signed currency value with color coding
+ * Examples: +€1,234.56 (green), -€1,234.56 (red)
  */
 export const formatSignedCurrencyWithColor = (
   value: number,
-  currencySymbol: string,
+  currencySymbol: string = '€',
 ): { color: Color; value: string } => {
-  const formattedValue = formatNumber(Math.abs(value))
+  const absValue = Math.abs(value)
+  const formattedValue = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(absValue)
+
   const color = value >= 0 ? Color.Green : Color.Red
   const sign = value >= 0 ? '+' : '-'
-  return { color, value: `${currencySymbol} ${sign}${formattedValue}` }
+
+  return {
+    color,
+    value: `${sign}${currencySymbol}${formattedValue}`,
+  }
 }
 
 /**
- * Formats a signed number with color coding
+ * Formats a signed percentage with color coding
+ * Examples: +5.25% (green), -3.50% (red)
  */
-export const formatSignedNumberWithColor = (
+export const formatSignedPercentageWithColor = (
   value: number,
 ): { color: Color; value: string } => {
-  const formattedValue = formatNumber(Math.abs(value))
+  const formattedValue = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(value))
+
   const color = value >= 0 ? Color.Green : Color.Red
   const sign = value >= 0 ? '+' : '-'
-  return { color, value: `${sign}${formattedValue}` }
+
+  return {
+    color,
+    value: `${sign}${formattedValue}%`,
+  }
 }
 
 /**
- * Gets cryptocurrency icon URL from jsdelivr CDN
+ * Gets cryptocurrency icon URL
  */
 export const getCryptocurrencyIcon = (symbol: string): Image => {
   const baseUrl =
@@ -55,19 +74,4 @@ export const getCryptocurrencyIcon = (symbol: string): Image => {
     source: iconUrl,
     fallback: `${baseUrl}/generic.png`,
   }
-}
-
-/**
- * Gets currency symbol from market string
- */
-export const getCurrencySymbolFromMarket = (market: string): string => {
-  if (market.endsWith('-USDC')) return '$'
-  return '€' // Default to EUR
-}
-
-/**
- * Formats market display from trading pair format
- */
-export const formatMarketDisplay = (market: string): string => {
-  return market.replace('-', ' / ')
 }
