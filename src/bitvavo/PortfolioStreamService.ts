@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import {
   Array,
   Chunk,
   Config,
   Console,
   Effect,
-  Fiber,
   Order,
   pipe,
   PubSub,
@@ -42,7 +42,6 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
       const setup = () =>
         Effect.gen(function* () {
           const pubsub = yield* PubSub.unbounded<number>()
-          const myProcId = Math.random().toString(36).substring(2, 15)
           const currentPricesMap = new Map<string, number>()
 
           // get balances
@@ -114,7 +113,6 @@ export class PortfolioStreamService extends Effect.Service<PortfolioStreamServic
                     },
                   )
                 }),
-                Stream.tap(() => Console.debug(myProcId, 'tick')),
                 Stream.throttle({
                   cost: () => 1,
                   duration: '2 seconds',

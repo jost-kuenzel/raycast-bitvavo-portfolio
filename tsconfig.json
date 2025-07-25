@@ -25,6 +25,7 @@
     "noPropertyAccessFromIndexSignature": false
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "test-bitvavo.ts"
   ]
 }

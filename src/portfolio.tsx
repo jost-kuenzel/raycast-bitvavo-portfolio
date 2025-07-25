@@ -7,7 +7,7 @@ import {
   List,
   openExtensionPreferences,
 } from '@raycast/api'
-import { Effect, Fiber, pipe, Stream } from 'effect'
+import { Effect, pipe, Stream } from 'effect'
 import { useEffect, useState } from 'react'
 import { PortfolioStreamService } from './bitvavo/PortfolioStreamService.js'
 import { run } from './bitvavo/Runtime.js'
@@ -20,7 +20,6 @@ import {
   getCryptocurrencyIcon,
   getCurrencySymbolFromMarket,
 } from './utils.js'
-import { set } from 'effect/HashMap'
 
 type SummaryType = typeof Summary.Type
 
