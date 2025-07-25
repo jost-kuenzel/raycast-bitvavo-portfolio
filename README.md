@@ -1,6 +1,6 @@
 # Bitvavo Portfolio Tracker
 
-Tracks your cryptocurrency portfolio from the Bitvavo exchange, providing a comprehensive gain/loss analysis based on your entire trading history. This tool is designed for buy-and-hold investors who want to monitor their portfolio performance in Raycast.
+Tracks your cryptocurrency portfolio from the Bitvavo exchange and provides a comprehensive gain/loss analysis based on your entire trading history. This tool is designed for buy-and-hold investors who want to monitor their portfolio performance in Raycast. Values update in real-time, ensuring you always have the latest information at your fingertips.
 
 ## Setup
 
