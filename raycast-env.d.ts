@@ -8,9 +8,9 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Bitvavo API Key - Your Bitvavo API key from account settings */
+  /** Bitvavo API Key - Your Bitvavo API key from account settings (64 characters) */
   "bitvavoApiKey": string,
-  /** Bitvavo API Secret - Your Bitvavo API secret from account settings */
+  /** Bitvavo API Secret - Your Bitvavo API secret from account settings (128 characters) */
   "bitvavoApiSecret": string
 }
 

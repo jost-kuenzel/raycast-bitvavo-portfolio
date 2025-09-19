@@ -17,6 +17,8 @@ import {
   formatSignedCurrencyWithColor,
   formatSignedPercentageWithColor,
   getCryptocurrencyIcon,
+  getUserFriendlyErrorMessage,
+  validateApiCredentials,
 } from './utils.js'
 
 type SummaryType = typeof Summary.Type
@@ -32,8 +34,17 @@ export default function Portfolio() {
   const [error, setError] = useState<string | null>(null)
   const preferences = getPreferenceValues<Preferences>()
 
-  const loadPortfolio = () =>
-    run(
+  const loadPortfolio = () => {
+    const validationError = validateApiCredentials(
+      preferences.bitvavoApiKey,
+      preferences.bitvavoApiSecret,
+    )
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
+    return run(
       new Map([
         ['BITVAVO_API_REST_URL', 'https://api.bitvavo.com/v2'],
         ['BITVAVO_API_WS_URL', 'wss://ws.bitvavo.com/v2/'],
@@ -48,8 +59,16 @@ export default function Portfolio() {
           Stream.tap(summary => Effect.sync(() => setSummary(summary))),
           Stream.runDrain,
         )
-      }).pipe(Effect.catchAll(err => Effect.sync(() => setError(err.message)))),
+      }).pipe(
+        Effect.catchAll(err =>
+          Effect.sync(() => {
+            const userFriendlyMessage = getUserFriendlyErrorMessage(err.message)
+            setError(userFriendlyMessage)
+          }),
+        ),
+      ),
     )
+  }
 
   useEffect(() => {
     loadPortfolio()
@@ -80,7 +99,21 @@ export default function Portfolio() {
       isShowingDetail
       isLoading={isLoading}
       searchBarPlaceholder="Search assets..."
+      actions={
+        <ActionPanel>
+          <Action
+            title="Open Extension Preferences"
+            onAction={openExtensionPreferences}
+          />
+        </ActionPanel>
+      }
     >
+      {!isLoading && (!summary?.assets || summary.assets.length === 0) && (
+        <List.EmptyView
+          title="No Assets Found"
+          description="Your portfolio appears to be empty or no assets were found with balances"
+        />
+      )}
       {summary?.assets.map(asset => {
         const iconPath = getCryptocurrencyIcon(asset.symbol)
         return (
@@ -96,6 +129,14 @@ export default function Portfolio() {
                 },
               },
             ]}
+            actions={
+              <ActionPanel>
+                <Action
+                  title="Open Extension Preferences"
+                  onAction={openExtensionPreferences}
+                />
+              </ActionPanel>
+            }
             detail={
               <List.Item.Detail
                 metadata={
@@ -144,6 +185,14 @@ export default function Portfolio() {
         <List.Item
           key="totals"
           title="Totals"
+          actions={
+            <ActionPanel>
+              <Action
+                title="Open Extension Preferences"
+                onAction={openExtensionPreferences}
+              />
+            </ActionPanel>
+          }
           detail={
             <List.Item.Detail
               metadata={

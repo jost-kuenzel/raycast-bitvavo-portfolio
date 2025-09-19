@@ -1,9 +1,10 @@
 {
-  "name": "raycast-bitvavo-portfolio",
+  "name": "bitvavo-portfolio",
   "title": "Bitvavo Portfolio Tracker",
   "description": "View your Bitvavo cryptocurrency portfolio overview with gains/losses",
   "icon": "icon.png",
   "author": "jost_kunzel",
+  "version": "1.0.0",
   "categories": [
     "Finance"
   ],
@@ -20,16 +21,18 @@
     {
       "name": "bitvavoApiKey",
       "title": "Bitvavo API Key",
-      "description": "Your Bitvavo API key from account settings",
+      "description": "Your Bitvavo API key from account settings (64 characters)",
       "type": "textfield",
-      "required": true
+      "required": true,
+      "placeholder": "Enter your 64-character API key"
     },
     {
       "name": "bitvavoApiSecret",
       "title": "Bitvavo API Secret",
-      "description": "Your Bitvavo API secret from account settings",
+      "description": "Your Bitvavo API secret from account settings (128 characters)",
       "type": "password",
-      "required": true
+      "required": true,
+      "placeholder": "Enter your 128-character API secret"
     }
   ],
   "scripts": {
